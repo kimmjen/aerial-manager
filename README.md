@@ -2,6 +2,8 @@
 
 Put **your own videos on the macOS lock screen** — through a local web UI.
 
+![Aerial Manager](docs/screenshot.png)
+
 macOS plays "aerial" videos on the lock screen and as a screen saver. On **macOS 26 (Tahoe)** the downloaded aerial videos live in a user-writable folder:
 
 ```
