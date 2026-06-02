@@ -56,17 +56,34 @@ export default function Home() {
     }
   }
 
+  /** Upload a file into the default library dir — 409 (already exists) is non-fatal. */
+  async function uploadVideo(file: File): Promise<{ dir: LibraryDirKey; name: string }> {
+    const form = new FormData();
+    form.append("files", file);
+    const res = await fetch("/api/library/upload", { method: "POST", body: form });
+    const body = await res.json();
+    if (!res.ok && res.status !== 409) throw new Error(body.error);
+    return {
+      dir: body.dir,
+      name: Array.isArray(body.saved) && body.saved[0] ? body.saved[0] : file.name,
+    };
+  }
+
+  async function applySlot(uuid: string, dir: LibraryDirKey, name: string) {
+    const res = await fetch("/api/slots/apply", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ uuid, dir, name }),
+    });
+    const body = await res.json();
+    if (!res.ok) throw new Error(body.error);
+  }
+
   /** Apply a library video to the slot currently shown on the lock screen (fallback: slots[0]). */
   async function applyToLiveSlot(dir: LibraryDirKey, name: string) {
     const target = slots.find((s) => s.isSelected) ?? slots[0];
     if (!target) throw new Error("No aerial slot found. Download an aerial wallpaper in System Settings first.");
-    const applyRes = await fetch("/api/slots/apply", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ uuid: target.uuid, dir, name }),
-    });
-    const applyBody = await applyRes.json();
-    if (!applyRes.ok) throw new Error(applyBody.error);
+    await applySlot(target.uuid, dir, name);
 
     // if we fell back to slots[0] and it was not the selected slot, make it the lock screen
     if (!target.isSelected) {
@@ -77,6 +94,21 @@ export default function Home() {
       });
       const selBody = await selRes.json();
       if (!selRes.ok) throw new Error(selBody.error);
+    }
+  }
+
+  /** Upload a file and apply it to a specific slot (live or not). */
+  async function replaceSlotWithFile(uuid: string, file: File) {
+    setBusy(true);
+    setError(null);
+    try {
+      const { dir, name } = await uploadVideo(file);
+      await applySlot(uuid, dir, name);
+      await refresh();
+    } catch (e) {
+      setError(String(e));
+    } finally {
+      setBusy(false);
     }
   }
 
@@ -99,18 +131,9 @@ export default function Home() {
     setBusy(true);
     setError(null);
     try {
-      // 1. upload into the default library dir — 409 (already exists) is non-fatal
       setReplaceState("uploading");
-      const form = new FormData();
-      form.append("files", file);
-      const upRes = await fetch("/api/library/upload", { method: "POST", body: form });
-      const upBody = await upRes.json();
-      if (!upRes.ok && upRes.status !== 409) throw new Error(upBody.error);
-      const dir: string = upBody.dir;
-      const name =
-        Array.isArray(upBody.saved) && upBody.saved[0] ? upBody.saved[0] : file.name;
+      const { dir, name } = await uploadVideo(file);
 
-      // 2. apply to the live slot
       setReplaceState("applying");
       await applyToLiveSlot(dir, name);
 
@@ -191,7 +214,13 @@ export default function Home() {
           onError={setError}
           onReplaceLockScreen={replaceWithLibrary}
         />
-        <SlotBoard slots={otherSlots} selectedVideo={selected} busy={busy} onAction={runAction} />
+        <SlotBoard
+          slots={otherSlots}
+          selectedVideo={selected}
+          busy={busy}
+          onAction={runAction}
+          onReplaceSlot={replaceSlotWithFile}
+        />
       </div>
     </main>
   );
