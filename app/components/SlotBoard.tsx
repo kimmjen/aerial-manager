@@ -1,5 +1,6 @@
 "use client";
 
+import { useRef, useState } from "react";
 import type { LibraryVideo } from "@/lib/library";
 import type { SlotInfo } from "@/lib/slots";
 import HoverVideo from "./HoverVideo";
@@ -10,9 +11,18 @@ interface Props {
   selectedVideo: LibraryVideo | null;
   busy: boolean;
   onAction: (run: () => Promise<Response>) => void;
+  onReplaceSlot: (uuid: string, file: File) => void;
 }
 
-export default function SlotBoard({ slots, selectedVideo, busy, onAction }: Props) {
+export default function SlotBoard({ slots, selectedVideo, busy, onAction, onReplaceSlot }: Props) {
+  const fileInput = useRef<HTMLInputElement>(null);
+  const [pickingFor, setPickingFor] = useState<string | null>(null);
+
+  function pickFileFor(uuid: string) {
+    setPickingFor(uuid);
+    fileInput.current?.click();
+  }
+
   function apply(uuid: string) {
     if (!selectedVideo) return;
     onAction(() =>
@@ -48,6 +58,18 @@ export default function SlotBoard({ slots, selectedVideo, busy, onAction }: Prop
   return (
     <section>
       <h2 className="mb-3 text-sm font-medium text-zinc-400">Other Slots</h2>
+      <input
+        ref={fileInput}
+        type="file"
+        accept="video/*"
+        hidden
+        onChange={(e) => {
+          const f = e.target.files?.[0];
+          if (f && pickingFor) onReplaceSlot(pickingFor, f);
+          e.target.value = "";
+          setPickingFor(null);
+        }}
+      />
       <ul className="flex flex-col gap-3">
         {slots.map((s) => (
           <li
@@ -67,14 +89,22 @@ export default function SlotBoard({ slots, selectedVideo, busy, onAction }: Prop
               src={`/api/slots/stream?uuid=${s.uuid}&v=${s.size}`}
               className="mb-2 aspect-video w-full rounded-md bg-black object-cover"
             />
-            <div className="flex gap-2 text-xs">
+            <div className="flex flex-wrap gap-2 text-xs">
+              <button
+                onClick={() => pickFileFor(s.uuid)}
+                disabled={busy}
+                title="Pick a video file and put it in this slot"
+                className="rounded-md bg-zinc-100 px-3 py-1.5 text-xs font-medium text-zinc-900 transition-colors hover:bg-white disabled:pointer-events-none disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400"
+              >
+                Replace…
+              </button>
               <button
                 onClick={() => apply(s.uuid)}
                 disabled={busy || !selectedVideo}
                 title={selectedVideo ? `Apply "${selectedVideo.name}"` : "Select a video in the library first"}
-                className="rounded-md bg-zinc-100 px-3 py-1.5 text-xs font-medium text-zinc-900 transition-colors hover:bg-white disabled:pointer-events-none disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400"
+                className="rounded-md border border-zinc-700 px-3 py-1.5 text-xs text-zinc-300 transition-colors hover:bg-zinc-800 disabled:pointer-events-none disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400"
               >
-                Apply
+                Apply Selected
               </button>
               <button
                 onClick={() => restore(s.uuid)}

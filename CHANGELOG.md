@@ -16,3 +16,8 @@ Initial release.
 - Fix: page rendered with a white background on light-mode systems (scaffold CSS overrode the dark theme); the app is now dark-only with `color-scheme: dark`
 - Fix: Geist font was overridden by Arial
 - Updated README screenshot
+
+## v0.2.0 — 2026-06-02
+
+- Per-slot replace: every slot (not just the live one) now has a Replace… button that picks a file, uploads it, and applies it to that slot directly
+- Slot Apply button renamed to Apply Selected for clarity
