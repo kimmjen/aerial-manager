@@ -47,22 +47,14 @@ export default function SlotBoard({ slots, selectedVideo, busy, onAction }: Prop
 
   return (
     <section>
-      <h2 className="mb-3 text-sm font-medium text-zinc-400">Lock Screen Slots</h2>
+      <h2 className="mb-3 text-sm font-medium text-zinc-400">Other Slots</h2>
       <ul className="flex flex-col gap-3">
         {slots.map((s) => (
           <li
             key={s.uuid}
-            className={`rounded-lg border bg-zinc-900 p-3 transition-colors ${
-              s.isSelected ? "border-zinc-600" : "border-zinc-800 hover:border-zinc-700"
-            }`}
+            className="rounded-lg border border-zinc-800 bg-zinc-900 p-3 transition-colors hover:border-zinc-700"
           >
             <div className="mb-1 flex items-center gap-2">
-              {s.isSelected && (
-                <span className="inline-flex items-center gap-1.5">
-                  <span className="h-2 w-2 rounded-full bg-emerald-400" />
-                  <span className="text-xs text-emerald-400">Live</span>
-                </span>
-              )}
               <code className="font-mono text-xs text-zinc-500">{s.uuid.slice(0, 8)}</code>
               <span className="ml-auto text-xs text-zinc-500">{formatSize(s.size)}</span>
             </div>
@@ -93,7 +85,7 @@ export default function SlotBoard({ slots, selectedVideo, busy, onAction }: Prop
               </button>
               <button
                 onClick={() => select(s.uuid)}
-                disabled={busy || s.isSelected}
+                disabled={busy}
                 className="rounded-md border border-zinc-700 px-3 py-1.5 text-xs text-zinc-300 transition-colors hover:bg-zinc-800 disabled:pointer-events-none disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400"
               >
                 Set as Lock Screen
@@ -102,6 +94,7 @@ export default function SlotBoard({ slots, selectedVideo, busy, onAction }: Prop
           </li>
         ))}
       </ul>
+      {slots.length === 0 && <p className="text-sm text-zinc-500">No other slots.</p>}
     </section>
   );
 }
