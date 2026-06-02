@@ -10,3 +10,9 @@ Initial release.
 - Slot board: apply any video to any aerial slot, restore Apple originals from automatic backups
 - Switch the displayed slot (rewrites the wallpaper store `assetID`)
 - Dynamic slot discovery, configurable via `LIBRARY_DIRS` / `BACKUP_DIR` / `FFMPEG_PATH`
+
+## v0.1.1 — 2026-06-02
+
+- Fix: page rendered with a white background on light-mode systems (scaffold CSS overrode the dark theme); the app is now dark-only with `color-scheme: dark`
+- Fix: Geist font was overridden by Arial
+- Updated README screenshot
