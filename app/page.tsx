@@ -5,6 +5,7 @@ import type { LibraryDirKey } from "@/lib/config";
 import type { LibraryVideo } from "@/lib/library";
 import type { SlotInfo } from "@/lib/slots";
 import LibraryPanel from "./components/LibraryPanel";
+import LiveHero from "./components/LiveHero";
 import SlotBoard from "./components/SlotBoard";
 
 type ReplaceState = "idle" | "uploading" | "applying" | "done";
@@ -127,6 +128,8 @@ export default function Home() {
   }
 
   const replaceBusy = busy || replaceState !== "idle";
+  const liveSlot = slots.find((s) => s.isSelected) ?? null;
+  const otherSlots = slots.filter((s) => !s.isSelected);
 
   return (
     <main className="mx-auto max-w-6xl p-6">
@@ -176,6 +179,8 @@ export default function Home() {
         </div>
       )}
 
+      <LiveHero slot={liveSlot} busy={busy} onAction={runAction} />
+
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-[3fr_2fr]">
         <LibraryPanel
           videos={videos}
@@ -186,7 +191,7 @@ export default function Home() {
           onError={setError}
           onReplaceLockScreen={replaceWithLibrary}
         />
-        <SlotBoard slots={slots} selectedVideo={selected} busy={busy} onAction={runAction} />
+        <SlotBoard slots={otherSlots} selectedVideo={selected} busy={busy} onAction={runAction} />
       </div>
     </main>
   );

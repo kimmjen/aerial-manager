@@ -126,15 +126,15 @@ export default function LibraryPanel({
               <p className="mb-2 text-xs text-zinc-500">
                 {v.dir}/ · {formatSize(v.size)}
               </p>
+              <button
+                onClick={() => onReplaceLockScreen(v)}
+                disabled={busy}
+                title="Replace the current lock screen video with this one"
+                className="mb-2 w-full rounded-md bg-zinc-100 px-3 py-1.5 text-xs font-medium text-zinc-900 transition-colors hover:bg-white disabled:pointer-events-none disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400"
+              >
+                Replace Lock Screen
+              </button>
               <div className="flex gap-2 text-xs">
-                <button
-                  onClick={() => onReplaceLockScreen(v)}
-                  disabled={busy}
-                  title="Replace the current lock screen video with this one"
-                  className="rounded-md bg-zinc-100 px-3 py-1.5 text-xs font-medium text-zinc-900 transition-colors hover:bg-white disabled:pointer-events-none disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400"
-                >
-                  Replace Lock Screen
-                </button>
                 <button
                   onClick={() => onSelect(isSel ? null : v)}
                   className={
