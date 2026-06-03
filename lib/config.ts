@@ -61,3 +61,6 @@ function detectFfmpeg(): string {
 }
 
 export const FFMPEG = detectFfmpeg();
+
+/** ffprobe sits next to ffmpeg. */
+export const FFPROBE = process.env.FFPROBE_PATH ?? FFMPEG.replace(/ffmpeg$/, "ffprobe");
