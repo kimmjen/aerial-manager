@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.4.1 — 2026-06-03
+
+- Allow LAN access to the dev server via `ALLOWED_DEV_ORIGINS` (comma-separated hosts) so a phone/another device can open it; localhost still works without any config
+
 ## v0.4.0 — 2026-06-03
 
 - Auto-reformat on upload: videos whose codec can't live in a `.mov` (e.g. AV1) are re-encoded to H.264 in the background right after upload, so applying them later is always a fast lossless copy
