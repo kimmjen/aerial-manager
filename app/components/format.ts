@@ -4,6 +4,7 @@ export function formatSize(bytes: number | null): string {
   return `${Math.round(bytes / 1024)} KB`;
 }
 
-export function streamUrl(dir: string, name: string): string {
-  return `/api/library/stream?dir=${dir}&name=${encodeURIComponent(name)}`;
+export function streamUrl(dir: string, name: string, version?: number): string {
+  const v = version ? `&v=${Math.round(version)}` : "";
+  return `/api/library/stream?dir=${dir}&name=${encodeURIComponent(name)}${v}`;
 }

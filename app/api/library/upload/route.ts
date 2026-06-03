@@ -2,7 +2,10 @@ import fs from "fs";
 import path from "path";
 import { NextRequest, NextResponse } from "next/server";
 import { DEFAULT_UPLOAD_KEY, LIBRARY_DIRS } from "@/lib/config";
+import { probeCodec } from "@/lib/codec";
+import { convertInBackground } from "@/lib/jobs";
 import { isLibraryDirKey, isSafeVideoName } from "@/lib/paths";
+import { isMovCompatible } from "@/lib/transcode";
 
 export async function POST(req: NextRequest) {
   try {
@@ -21,6 +24,9 @@ export async function POST(req: NextRequest) {
       if (fs.existsSync(dest)) return NextResponse.json({ error: `already exists: ${name}`, dir }, { status: 409 });
       fs.writeFileSync(dest, Buffer.from(await file.arrayBuffer()));
       saved.push(name);
+
+      // auto-reformat incompatible codecs (AV1, …) to H.264 in the background
+      if (!isMovCompatible(await probeCodec(dest))) convertInBackground(dest);
     }
     return NextResponse.json({ saved, dir });
   } catch (e) {

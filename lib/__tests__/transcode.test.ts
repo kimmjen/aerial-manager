@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { ffmpegArgs, isMovCompatible } from "../transcode";
+import { ffmpegArgs, isMovCompatible, reencodeArgs } from "../transcode";
 
 describe("isMovCompatible", () => {
   it("accepts h264 and hevc (any case)", () => {
@@ -29,5 +29,9 @@ describe("ffmpegArgs", () => {
     expect(args).toContain("-an");
     expect(args).not.toContain("copy");
     expect(args.at(-1)).toBe("out.mov");
+  });
+
+  it("ffmpegArgs reuses reencodeArgs for incompatible codecs", () => {
+    expect(ffmpegArgs("av1", "in.mp4", "out.mov")).toEqual(reencodeArgs("in.mp4", "out.mov"));
   });
 });

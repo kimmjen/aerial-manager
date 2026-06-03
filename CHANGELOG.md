@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.4.0 — 2026-06-03
+
+- Auto-reformat on upload: videos whose codec can't live in a `.mov` (e.g. AV1) are re-encoded to H.264 in the background right after upload, so applying them later is always a fast lossless copy
+- Library items now expose `codec` and a `status` (`ready` / `converting` / `incompatible` / `error`); a minimal badge surfaces non-ready states (restyle freely)
+- Library list reflects conversion progress; the page polls while any conversion is in flight
+- Codec probing is cached by file mtime so listings stay fast with many videos
+
 ## v0.1.0 — 2026-06-02
 
 Initial release.

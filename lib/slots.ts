@@ -2,29 +2,14 @@ import { execFile } from "child_process";
 import fs from "fs";
 import path from "path";
 import { promisify } from "util";
-import { AERIALS_DIR, BACKUP_DIR, FFMPEG, FFPROBE, LibraryDirKey } from "./config";
+import { AERIALS_DIR, BACKUP_DIR, FFMPEG, LibraryDirKey } from "./config";
+import { probeCodec } from "./codec";
 import { readMapping, writeMapping, SlotSource } from "./mapping";
 import { resolveLibraryFile } from "./paths";
 import { ffmpegArgs } from "./transcode";
 import { getSelectedSlot, restartWallpaperAgent } from "./wallpaper";
 
 const run = promisify(execFile);
-
-/** Video codec of the first video stream, or null if it can't be determined. */
-async function probeVideoCodec(src: string): Promise<string | null> {
-  try {
-    const { stdout } = await run(FFPROBE, [
-      "-v", "error",
-      "-select_streams", "v:0",
-      "-show_entries", "stream=codec_name",
-      "-of", "default=nw=1:nk=1",
-      src,
-    ]);
-    return stdout.trim() || null;
-  } catch {
-    return null;
-  }
-}
 
 const UUID_RE = /^[0-9A-F]{8}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{12}$/i;
 
@@ -100,7 +85,7 @@ export async function applyToSlot(uuid: string, dir: LibraryDirKey, name: string
     fs.copyFileSync(slotPath(uuid), backupPath(uuid));
   }
 
-  const codec = await probeVideoCodec(src);
+  const codec = await probeCodec(src);
   const tmp = slotPath(uuid) + ".tmp.mov";
   try {
     await run(FFMPEG, ffmpegArgs(codec, src, tmp));

@@ -40,6 +40,14 @@ export default function Home() {
     refresh();
   }, [refresh]);
 
+  // while any upload is being reformatted, poll until conversions finish
+  const anyConverting = videos.some((v) => v.status === "converting");
+  useEffect(() => {
+    if (!anyConverting) return;
+    const id = setInterval(refresh, 3000);
+    return () => clearInterval(id);
+  }, [anyConverting, refresh]);
+
   async function runAction(run: () => Promise<Response>) {
     setBusy(true);
     setError(null);
