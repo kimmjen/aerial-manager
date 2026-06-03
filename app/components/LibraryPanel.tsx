@@ -108,10 +108,23 @@ export default function LibraryPanel({ videos, slots, busy, onChanged, onError, 
               key={id}
               className="group rounded-lg border border-zinc-800 bg-zinc-900 p-3 transition-colors hover:border-zinc-700"
             >
-              <HoverVideo
-                src={streamUrl(v.dir, v.name)}
-                className="mb-2 aspect-video w-full rounded-md bg-black object-cover"
-              />
+              <div className="relative mb-2">
+                <HoverVideo
+                  key={v.mtime}
+                  src={streamUrl(v.dir, v.name, v.mtime)}
+                  className="aspect-video w-full rounded-md bg-black object-cover"
+                />
+                {/* minimal status badge — restyle freely; data is v.status / v.codec */}
+                {v.status !== "ready" && (
+                  <span className="absolute right-1.5 top-1.5 rounded bg-zinc-950/80 px-1.5 py-0.5 text-[10px] text-zinc-300">
+                    {v.status === "converting"
+                      ? "converting…"
+                      : v.status === "error"
+                        ? "convert failed"
+                        : (v.codec ?? "unknown")}
+                  </span>
+                )}
+              </div>
               <p className="truncate text-sm text-zinc-100" title={v.name}>
                 {v.name}
               </p>

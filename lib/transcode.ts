@@ -6,18 +6,14 @@ export function isMovCompatible(codec: string | null): boolean {
   return codec !== null && MOV_COMPATIBLE.has(codec.toLowerCase());
 }
 
-/**
- * ffmpeg args to produce a lock-screen-ready .mov at `out` from `src`.
- * Compatible sources are stream-copied (fast, lossless); others are re-encoded
- * to H.264 via VideoToolbox (hardware-accelerated on macOS).
- */
-export function ffmpegArgs(codec: string | null, src: string, out: string): string[] {
-  const base = ["-y", "-loglevel", "error", "-i", src];
-  if (isMovCompatible(codec)) {
-    return [...base, "-c", "copy", "-movflags", "+faststart", out];
-  }
+/** Re-encode `src` to H.264 via VideoToolbox (hardware-accelerated on macOS). */
+export function reencodeArgs(src: string, out: string): string[] {
   return [
-    ...base,
+    "-y",
+    "-loglevel",
+    "error",
+    "-i",
+    src,
     "-an", // aerials are silent; also avoids incompatible audio codecs
     "-c:v",
     "h264_videotoolbox",
@@ -29,4 +25,15 @@ export function ffmpegArgs(codec: string | null, src: string, out: string): stri
     "+faststart",
     out,
   ];
+}
+
+/**
+ * ffmpeg args to produce a lock-screen-ready .mov at `out` from `src`.
+ * Compatible sources are stream-copied (fast, lossless); others are re-encoded.
+ */
+export function ffmpegArgs(codec: string | null, src: string, out: string): string[] {
+  if (isMovCompatible(codec)) {
+    return ["-y", "-loglevel", "error", "-i", src, "-c", "copy", "-movflags", "+faststart", out];
+  }
+  return reencodeArgs(src, out);
 }

@@ -3,7 +3,7 @@ import { listLibrary } from "@/lib/library";
 
 export async function GET() {
   try {
-    return NextResponse.json(listLibrary());
+    return NextResponse.json(await listLibrary());
   } catch (e) {
     return NextResponse.json({ error: String(e) }, { status: 500 });
   }
