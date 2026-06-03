@@ -81,7 +81,7 @@ export default function SlotBoard({ slots, busy, onAction, onReplaceSlot }: Prop
                 onClick={() => pickFileFor(s.uuid)}
                 disabled={busy}
                 title="Pick a video file and put it in this slot"
-                className="rounded-md bg-zinc-100 px-3 py-1.5 text-xs font-medium text-zinc-900 transition-colors hover:bg-white disabled:pointer-events-none disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400"
+                className="rounded-md border border-zinc-600 px-3 py-1.5 text-xs font-medium text-zinc-100 transition-colors hover:bg-zinc-800 disabled:pointer-events-none disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400"
               >
                 Replace…
               </button>

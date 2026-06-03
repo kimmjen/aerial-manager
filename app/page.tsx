@@ -92,13 +92,6 @@ export default function Home() {
     }
   }
 
-  /** One-click: apply a library video to the slot currently on the lock screen. */
-  async function replaceWithLibrary(v: LibraryVideo) {
-    const live = slots.find((s) => s.isSelected) ?? slots[0];
-    if (!live) return setError("No aerial slot found. Download an aerial wallpaper in System Settings first.");
-    await applyVideoToSlot(v, live.uuid);
-  }
-
   /** Upload a file and apply it to a specific slot. */
   async function replaceSlotWithFile(uuid: string, file: File) {
     setBusy(true);
@@ -200,7 +193,6 @@ export default function Home() {
           busy={busy}
           onChanged={refresh}
           onError={setError}
-          onReplaceLockScreen={replaceWithLibrary}
           onApplyToSlot={applyVideoToSlot}
         />
         <SlotBoard slots={otherSlots} busy={busy} onAction={runAction} onReplaceSlot={replaceSlotWithFile} />

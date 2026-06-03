@@ -13,19 +13,10 @@ interface Props {
   busy: boolean;
   onChanged: () => void;
   onError: (msg: string) => void;
-  onReplaceLockScreen: (v: LibraryVideo) => void;
   onApplyToSlot: (v: LibraryVideo, uuid: string) => void;
 }
 
-export default function LibraryPanel({
-  videos,
-  slots,
-  busy,
-  onChanged,
-  onError,
-  onReplaceLockScreen,
-  onApplyToSlot,
-}: Props) {
+export default function LibraryPanel({ videos, slots, busy, onChanged, onError, onApplyToSlot }: Props) {
   const [dirFilter, setDirFilter] = useState<LibraryDirKey | "all">("all");
   const [uploading, setUploading] = useState(false);
   const [menuFor, setMenuFor] = useState<string | null>(null);
@@ -33,6 +24,8 @@ export default function LibraryPanel({
 
   const dirs = Array.from(new Set(videos.map((v) => v.dir)));
   const shown = videos.filter((v) => dirFilter === "all" || v.dir === dirFilter);
+  // live slot first so it's the top choice in every menu
+  const orderedSlots = [...slots].sort((a, b) => Number(b.isSelected) - Number(a.isSelected));
 
   async function upload(files: FileList | null) {
     if (!files || files.length === 0) return;
@@ -108,10 +101,11 @@ export default function LibraryPanel({
 
       <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         {shown.map((v) => {
-          const menuOpen = menuFor === `${v.dir}/${v.name}`;
+          const id = `${v.dir}/${v.name}`;
+          const menuOpen = menuFor === id;
           return (
             <li
-              key={`${v.dir}/${v.name}`}
+              key={id}
               className="group rounded-lg border border-zinc-800 bg-zinc-900 p-3 transition-colors hover:border-zinc-700"
             >
               <HoverVideo
@@ -124,54 +118,58 @@ export default function LibraryPanel({
               <p className="mb-2 text-xs text-zinc-500">
                 {v.dir}/ · {formatSize(v.size)}
               </p>
-              <button
-                onClick={() => onReplaceLockScreen(v)}
-                disabled={busy}
-                title="Replace the current lock screen video with this one"
-                className="mb-2 w-full rounded-md bg-zinc-100 px-3 py-1.5 text-xs font-medium text-zinc-900 transition-colors hover:bg-white disabled:pointer-events-none disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400"
-              >
-                Replace Lock Screen
-              </button>
-              <div className="flex gap-2 text-xs">
+              <div className="flex items-center gap-2 text-xs">
                 <div className="relative">
                   <button
-                    onClick={() => setMenuFor(menuOpen ? null : `${v.dir}/${v.name}`)}
+                    onClick={() => setMenuFor(menuOpen ? null : id)}
                     disabled={busy || slots.length === 0}
-                    className="rounded-md border border-zinc-700 px-3 py-1.5 text-xs text-zinc-300 transition-colors hover:bg-zinc-800 disabled:pointer-events-none disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400"
+                    className="rounded-md border border-zinc-600 px-3 py-1.5 text-xs font-medium text-zinc-100 transition-colors hover:bg-zinc-800 disabled:pointer-events-none disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400"
                   >
                     Apply to ▾
                   </button>
                   {menuOpen && (
-                    <div className="absolute z-10 mt-1 max-h-56 w-64 overflow-auto rounded-md border border-zinc-700 bg-zinc-900 py-1 shadow-lg">
-                      {slots.map((s) => (
-                        <button
-                          key={s.uuid}
-                          onClick={() => {
-                            setMenuFor(null);
-                            onApplyToSlot(v, s.uuid);
-                          }}
-                          className="flex w-full items-center gap-2 px-3 py-1.5 text-left text-xs text-zinc-300 transition-colors hover:bg-zinc-800"
-                        >
-                          {s.isSelected && <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-400" />}
-                          <span className="font-mono text-zinc-500">{s.uuid.slice(0, 8)}</span>
-                          <span className="truncate text-zinc-400">
-                            {s.isSelected ? "Live · " : ""}
-                            {s.source ? s.source.name : "original"}
-                          </span>
-                        </button>
-                      ))}
-                    </div>
+                    <>
+                      <button
+                        aria-label="Close menu"
+                        onClick={() => setMenuFor(null)}
+                        className="fixed inset-0 z-10 cursor-default"
+                      />
+                      <div className="absolute z-20 mt-1 max-h-56 w-64 overflow-auto rounded-md border border-zinc-700 bg-zinc-900 py-1 shadow-xl">
+                        {orderedSlots.map((s) => (
+                          <button
+                            key={s.uuid}
+                            onClick={() => {
+                              setMenuFor(null);
+                              onApplyToSlot(v, s.uuid);
+                            }}
+                            className="flex w-full items-center gap-2 px-3 py-1.5 text-left text-xs text-zinc-300 transition-colors hover:bg-zinc-800"
+                          >
+                            {s.isSelected ? (
+                              <>
+                                <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-400" />
+                                <span className="text-emerald-400">Lock screen</span>
+                              </>
+                            ) : (
+                              <span className="font-mono text-zinc-500">{s.uuid.slice(0, 8)}</span>
+                            )}
+                            <span className="ml-auto truncate pl-2 text-zinc-500">
+                              {s.source ? s.source.name : "original"}
+                            </span>
+                          </button>
+                        ))}
+                      </div>
+                    </>
                   )}
                 </div>
                 <button
                   onClick={() => rename(v)}
-                  className="rounded-md border border-zinc-700 px-3 py-1.5 text-xs text-zinc-300 transition-colors hover:bg-zinc-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400"
+                  className="rounded-md border border-zinc-800 px-3 py-1.5 text-xs text-zinc-400 transition-colors hover:bg-zinc-800 hover:text-zinc-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400"
                 >
                   Rename
                 </button>
                 <button
                   onClick={() => remove(v)}
-                  className="rounded-md border border-zinc-700 px-3 py-1.5 text-xs text-zinc-400 transition-colors hover:border-red-900 hover:text-red-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400"
+                  className="ml-auto rounded-md border border-zinc-800 px-3 py-1.5 text-xs text-zinc-500 transition-colors hover:border-red-900 hover:text-red-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400"
                 >
                   Delete
                 </button>
