@@ -21,3 +21,9 @@ Initial release.
 
 - Per-slot replace: every slot (not just the live one) now has a Replace… button that picks a file, uploads it, and applies it to that slot directly
 - Slot Apply button renamed to Apply Selected for clarity
+
+## v0.3.0 — 2026-06-03
+
+- Reworked apply flow: start from a library video and pick the target slot via an "Apply to ▾" menu (any slot, live or not)
+- Removed the confusing two-step select-then-apply: the global selection state and the slot "Apply Selected" button are gone
+- Slots keep their own "Replace…" (upload a file to that slot), Restore, and Set as Lock Screen actions
