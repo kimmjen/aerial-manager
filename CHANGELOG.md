@@ -21,3 +21,11 @@ Initial release.
 
 - Per-slot replace: every slot (not just the live one) now has a Replace… button that picks a file, uploads it, and applies it to that slot directly
 - Slot Apply button renamed to Apply Selected for clarity
+
+## v0.3.0 — 2026-06-03
+
+- Reworked apply flow: start from a library video and pick the target slot via an "Apply to ▾" menu (any slot, live or not); the live slot is listed first
+- Removed the confusing two-step select-then-apply: the global selection state and the slot "Apply Selected" button are gone
+- Slots keep their own "Replace…" (upload a file to that slot), Restore, and Set as Lock Screen actions
+- Design: single primary (white) CTA in the header; all other actions are quiet bordered buttons, for a clear focal point and a calmer grid. Apply-to menu closes on outside click
+- Fix: applying a video whose codec can't live in a `.mov` (e.g. AV1) now re-encodes to H.264 via VideoToolbox instead of failing; compatible codecs (H.264/HEVC) are still stream-copied losslessly

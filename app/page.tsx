@@ -20,7 +20,6 @@ const REPLACE_LABELS: Record<ReplaceState, string> = {
 export default function Home() {
   const [videos, setVideos] = useState<LibraryVideo[]>([]);
   const [slots, setSlots] = useState<SlotInfo[]>([]);
-  const [selected, setSelected] = useState<LibraryVideo | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [replaceState, setReplaceState] = useState<ReplaceState>("idle");
@@ -79,25 +78,21 @@ export default function Home() {
     if (!res.ok) throw new Error(body.error);
   }
 
-  /** Apply a library video to the slot currently shown on the lock screen (fallback: slots[0]). */
-  async function applyToLiveSlot(dir: LibraryDirKey, name: string) {
-    const target = slots.find((s) => s.isSelected) ?? slots[0];
-    if (!target) throw new Error("No aerial slot found. Download an aerial wallpaper in System Settings first.");
-    await applySlot(target.uuid, dir, name);
-
-    // if we fell back to slots[0] and it was not the selected slot, make it the lock screen
-    if (!target.isSelected) {
-      const selRes = await fetch("/api/slots/select", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ uuid: target.uuid }),
-      });
-      const selBody = await selRes.json();
-      if (!selRes.ok) throw new Error(selBody.error);
+  /** Apply a library video to a chosen slot. */
+  async function applyVideoToSlot(v: LibraryVideo, uuid: string) {
+    setBusy(true);
+    setError(null);
+    try {
+      await applySlot(uuid, v.dir, v.name);
+      await refresh();
+    } catch (e) {
+      setError(String(e));
+    } finally {
+      setBusy(false);
     }
   }
 
-  /** Upload a file and apply it to a specific slot (live or not). */
+  /** Upload a file and apply it to a specific slot. */
   async function replaceSlotWithFile(uuid: string, file: File) {
     setBusy(true);
     setError(null);
@@ -112,21 +107,7 @@ export default function Home() {
     }
   }
 
-  /** One-click replace with an existing library video. */
-  async function replaceWithLibrary(v: LibraryVideo) {
-    setBusy(true);
-    setError(null);
-    try {
-      await applyToLiveSlot(v.dir, v.name);
-      await refresh();
-    } catch (e) {
-      setError(String(e));
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  /** One-click replace with a newly uploaded file. */
+  /** Header one-click: upload a new file and apply it to the live slot. */
   async function replace(file: File) {
     setBusy(true);
     setError(null);
@@ -135,9 +116,10 @@ export default function Home() {
       const { dir, name } = await uploadVideo(file);
 
       setReplaceState("applying");
-      await applyToLiveSlot(dir, name);
+      const live = slots.find((s) => s.isSelected) ?? slots[0];
+      if (!live) throw new Error("No aerial slot found. Download an aerial wallpaper in System Settings first.");
+      await applySlot(live.uuid, dir, name);
 
-      // 3. done
       await refresh();
       setReplaceState("done");
       setTimeout(() => setReplaceState("idle"), 1500);
@@ -207,20 +189,13 @@ export default function Home() {
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-[3fr_2fr]">
         <LibraryPanel
           videos={videos}
-          selected={selected}
+          slots={slots}
           busy={busy}
-          onSelect={setSelected}
           onChanged={refresh}
           onError={setError}
-          onReplaceLockScreen={replaceWithLibrary}
+          onApplyToSlot={applyVideoToSlot}
         />
-        <SlotBoard
-          slots={otherSlots}
-          selectedVideo={selected}
-          busy={busy}
-          onAction={runAction}
-          onReplaceSlot={replaceSlotWithFile}
-        />
+        <SlotBoard slots={otherSlots} busy={busy} onAction={runAction} onReplaceSlot={replaceSlotWithFile} />
       </div>
     </main>
   );
