@@ -3,7 +3,7 @@ import fs from "fs";
 import path from "path";
 import { promisify } from "util";
 import { AERIALS_DIR, BACKUP_DIR, FFMPEG, LibraryDirKey } from "./config";
-import { probeCodec } from "./codec";
+import { probeMeta } from "./codec";
 import { readMapping, writeMapping, SlotSource } from "./mapping";
 import { resolveLibraryFile } from "./paths";
 import { ffmpegArgs } from "./transcode";
@@ -85,10 +85,10 @@ export async function applyToSlot(uuid: string, dir: LibraryDirKey, name: string
     fs.copyFileSync(slotPath(uuid), backupPath(uuid));
   }
 
-  const codec = await probeCodec(src);
+  const meta = await probeMeta(src);
   const tmp = slotPath(uuid) + ".tmp.mov";
   try {
-    await run(FFMPEG, ffmpegArgs(codec, src, tmp));
+    await run(FFMPEG, ffmpegArgs(meta, src, tmp));
     fs.renameSync(tmp, slotPath(uuid));
   } finally {
     fs.rmSync(tmp, { force: true });
