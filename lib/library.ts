@@ -1,6 +1,6 @@
 import fs from "fs";
 import { LIBRARY_DIRS, LibraryDirKey } from "./config";
-import { getCodecCached } from "./codec";
+import { getMetaCached } from "./codec";
 import { getJob } from "./jobs";
 import { isSafeVideoName, resolveLibraryFile } from "./paths";
 import { deriveLibraryStatus, LibraryStatus } from "./status";
@@ -11,6 +11,9 @@ export interface LibraryVideo {
   size: number;
   mtime: number;
   codec: string | null;
+  width: number | null;
+  height: number | null;
+  fps: number | null;
   status: LibraryStatus;
 }
 
@@ -34,14 +37,17 @@ export async function listLibrary(): Promise<LibraryVideo[]> {
 
   const out = await Promise.all(
     found.map(async (f) => {
-      const codec = await getCodecCached(f.path);
+      const meta = await getMetaCached(f.path);
       return {
         dir: f.dir,
         name: f.name,
         size: f.size,
         mtime: f.mtime,
-        codec,
-        status: deriveLibraryStatus(codec, getJob(f.path)),
+        codec: meta.codec,
+        width: meta.width,
+        height: meta.height,
+        fps: meta.fps,
+        status: deriveLibraryStatus(meta.codec, getJob(f.path)),
       };
     }),
   );

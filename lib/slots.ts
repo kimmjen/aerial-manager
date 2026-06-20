@@ -3,7 +3,7 @@ import fs from "fs";
 import path from "path";
 import { promisify } from "util";
 import { AERIALS_DIR, BACKUP_DIR, FFMPEG, LibraryDirKey } from "./config";
-import { probeCodec } from "./codec";
+import { probeMeta } from "./codec";
 import { readMapping, writeMapping, SlotSource } from "./mapping";
 import { resolveLibraryFile } from "./paths";
 import { ffmpegArgs } from "./transcode";
@@ -72,8 +72,8 @@ export async function getSlots(): Promise<SlotInfo[]> {
   });
 }
 
-/** Remux a library video into a slot (stream copy, no re-encode) and restart the agent. */
-export async function applyToSlot(uuid: string, dir: LibraryDirKey, name: string): Promise<void> {
+/** Write a library video into a slot, normalized for the lock screen. Does not restart the agent. */
+async function writeSlotFromSource(uuid: string, dir: LibraryDirKey, name: string): Promise<void> {
   const src = resolveLibraryFile(dir, name);
   if (!fs.existsSync(src)) throw new Error(`source not found: ${name}`);
   if (!fs.existsSync(slotPath(uuid))) throw new Error(`slot not found: ${uuid}`);
@@ -85,10 +85,10 @@ export async function applyToSlot(uuid: string, dir: LibraryDirKey, name: string
     fs.copyFileSync(slotPath(uuid), backupPath(uuid));
   }
 
-  const codec = await probeCodec(src);
+  const meta = await probeMeta(src);
   const tmp = slotPath(uuid) + ".tmp.mov";
   try {
-    await run(FFMPEG, ffmpegArgs(codec, src, tmp));
+    await run(FFMPEG, ffmpegArgs(meta, src, tmp));
     fs.renameSync(tmp, slotPath(uuid));
   } finally {
     fs.rmSync(tmp, { force: true });
@@ -97,7 +97,39 @@ export async function applyToSlot(uuid: string, dir: LibraryDirKey, name: string
 
   mapping[uuid] = { dir, name, appliedAt: new Date().toISOString() };
   writeMapping(mapping);
+}
+
+/** Apply a library video to a slot (normalized for the lock screen) and restart the agent. */
+export async function applyToSlot(uuid: string, dir: LibraryDirKey, name: string): Promise<void> {
+  await writeSlotFromSource(uuid, dir, name);
   await restartWallpaperAgent();
+}
+
+export interface ReapplyResult {
+  uuid: string;
+  name: string;
+  ok: boolean;
+  error?: string;
+}
+
+/**
+ * Re-apply every slot that currently holds a custom video, running each through
+ * the current normalization. Originals have no mapping entry and are skipped.
+ * Restarts the agent once at the end.
+ */
+export async function reapplyAll(): Promise<ReapplyResult[]> {
+  const mapping = readMapping();
+  const results: ReapplyResult[] = [];
+  for (const [uuid, source] of Object.entries(mapping)) {
+    try {
+      await writeSlotFromSource(uuid, source.dir, source.name);
+      results.push({ uuid, name: source.name, ok: true });
+    } catch (e) {
+      results.push({ uuid, name: source.name, ok: false, error: String(e) });
+    }
+  }
+  await restartWallpaperAgent();
+  return results;
 }
 
 /** Restore the original Apple aerial from backup. */

@@ -5,7 +5,7 @@ import type { LibraryVideo } from "@/lib/library";
 import type { LibraryDirKey } from "@/lib/config";
 import type { SlotInfo } from "@/lib/slots";
 import HoverVideo from "./HoverVideo";
-import { formatSize, streamUrl } from "./format";
+import { formatSize, formatVideoSpec, streamUrl } from "./format";
 
 interface Props {
   videos: LibraryVideo[];
@@ -16,10 +16,19 @@ interface Props {
   onApplyToSlot: (v: LibraryVideo, uuid: string) => void;
 }
 
+/** Color + label for a non-ready library item. */
+function statusBadge(v: LibraryVideo) {
+  if (v.status === "converting") return { label: "converting…", color: "var(--accent)", pulse: true };
+  if (v.status === "error") return { label: "convert failed", color: "var(--danger)", pulse: false };
+  return { label: v.codec ?? "unknown", color: "var(--warn)", pulse: false };
+}
+
 export default function LibraryPanel({ videos, slots, busy, onChanged, onError, onApplyToSlot }: Props) {
   const [dirFilter, setDirFilter] = useState<LibraryDirKey | "all">("all");
   const [uploading, setUploading] = useState(false);
   const [menuFor, setMenuFor] = useState<string | null>(null);
+  const [dragging, setDragging] = useState(false);
+  const dragDepth = useRef(0);
   const fileInput = useRef<HTMLInputElement>(null);
 
   const dirs = Array.from(new Set(videos.map((v) => v.dir)));
@@ -71,72 +80,96 @@ export default function LibraryPanel({ videos, slots, busy, onChanged, onError, 
   }
 
   return (
-    <section>
-      <div className="mb-3 flex items-center gap-2">
-        <h2 className="text-sm font-medium text-zinc-400">Video Library</h2>
-        <div className="ml-auto flex gap-1">
-          {["all", ...dirs].map((d) => (
-            <button
-              key={d}
-              onClick={() => setDirFilter(d)}
-              className={
-                dirFilter === d
-                  ? "rounded-md bg-zinc-800 px-2 py-1 text-xs text-zinc-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400"
-                  : "rounded-md px-2 py-1 text-xs text-zinc-500 transition-colors hover:text-zinc-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400"
-              }
-            >
-              {d === "all" ? "All" : d + "/"}
-            </button>
-          ))}
+    <section
+      onDragEnter={(e) => {
+        e.preventDefault();
+        dragDepth.current += 1;
+        setDragging(true);
+      }}
+      onDragOver={(e) => e.preventDefault()}
+      onDragLeave={() => {
+        dragDepth.current -= 1;
+        if (dragDepth.current <= 0) setDragging(false);
+      }}
+      onDrop={(e) => {
+        e.preventDefault();
+        dragDepth.current = 0;
+        setDragging(false);
+        upload(e.dataTransfer.files);
+      }}
+      className="glass relative overflow-hidden rounded-[24px] p-4 sm:p-5"
+    >
+      <div className="mb-4 flex flex-wrap items-center gap-3">
+        <h2 className="section-title">Library</h2>
+        <span className="text-xs text-[var(--text-faint)]">{shown.length}</span>
+        <div className="ml-auto flex items-center gap-2">
+          {dirs.length > 0 && (
+            <div className="segmented">
+              {(["all", ...dirs] as const).map((d) => (
+                <button key={d} data-active={dirFilter === d} onClick={() => setDirFilter(d)}>
+                  {d === "all" ? "All" : d}
+                </button>
+              ))}
+            </div>
+          )}
+          <button
+            onClick={() => fileInput.current?.click()}
+            disabled={uploading}
+            className="btn btn-glass px-4 py-2 text-xs"
+          >
+            {uploading ? "Uploading…" : "Upload"}
+          </button>
+          <input
+            ref={fileInput}
+            type="file"
+            accept="video/*"
+            multiple
+            hidden
+            onChange={(e) => upload(e.target.files)}
+          />
         </div>
-        <button
-          onClick={() => fileInput.current?.click()}
-          disabled={uploading}
-          className="rounded-md border border-zinc-700 px-3 py-1.5 text-xs text-zinc-300 transition-colors hover:bg-zinc-800 disabled:pointer-events-none disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400"
-        >
-          {uploading ? "Uploading…" : "Upload"}
-        </button>
-        <input ref={fileInput} type="file" accept="video/*" multiple hidden onChange={(e) => upload(e.target.files)} />
       </div>
 
-      <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+      <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         {shown.map((v) => {
           const id = `${v.dir}/${v.name}`;
           const menuOpen = menuFor === id;
           return (
-            <li
-              key={id}
-              className="group rounded-lg border border-zinc-800 bg-zinc-900 p-3 transition-colors hover:border-zinc-700"
-            >
-              <div className="relative mb-2">
+            <li key={id} className="glass lift group rounded-[18px] p-2.5">
+              <div className="relative mb-2.5">
                 <HoverVideo
                   key={v.mtime}
                   src={streamUrl(v.dir, v.name, v.mtime)}
-                  className="aspect-video w-full rounded-md bg-black object-cover"
+                  className="aspect-video w-full rounded-[12px] bg-black object-cover"
                 />
-                {/* minimal status badge — restyle freely; data is v.status / v.codec */}
-                {v.status !== "ready" && (
-                  <span className="absolute right-1.5 top-1.5 rounded bg-zinc-950/80 px-1.5 py-0.5 text-[10px] text-zinc-300">
-                    {v.status === "converting"
-                      ? "converting…"
-                      : v.status === "error"
-                        ? "convert failed"
-                        : (v.codec ?? "unknown")}
-                  </span>
-                )}
+                {v.status !== "ready" &&
+                  (() => {
+                    const b = statusBadge(v);
+                    return (
+                      <span className="absolute left-2 top-2 inline-flex items-center gap-1.5 rounded-full border border-[var(--glass-border)] bg-black/55 px-2 py-0.5 text-[10px] font-medium text-[var(--text)] backdrop-blur-md">
+                        <span
+                          className={b.pulse ? "live-dot" : "inline-block h-1.5 w-1.5 rounded-full"}
+                          style={{ background: b.color }}
+                        />
+                        {b.label}
+                      </span>
+                    );
+                  })()}
               </div>
-              <p className="truncate text-sm text-zinc-100" title={v.name}>
+              <p className="truncate px-0.5 text-sm text-[var(--text)]" title={v.name}>
                 {v.name}
               </p>
-              <p className="mb-2 text-xs text-zinc-500">
-                {v.dir}/ · {formatSize(v.size)}
+              <p className="mb-2.5 px-0.5 font-mono text-[11px] text-[var(--text-faint)]">
+                {[`${v.dir}/`, formatVideoSpec(v.width, v.height, v.fps), formatSize(v.size)]
+                  .filter(Boolean)
+                  .join(" · ")}
               </p>
-              <div className="flex items-center gap-2 text-xs">
+              <div className="flex items-center gap-1.5">
                 <div className="relative">
                   <button
                     onClick={() => setMenuFor(menuOpen ? null : id)}
                     disabled={busy || slots.length === 0}
-                    className="rounded-md border border-zinc-600 px-3 py-1.5 text-xs font-medium text-zinc-100 transition-colors hover:bg-zinc-800 disabled:pointer-events-none disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400"
+                    className="btn btn-primary px-3 py-1.5 text-xs"
                   >
                     Apply to ▾
                   </button>
@@ -147,7 +180,7 @@ export default function LibraryPanel({ videos, slots, busy, onChanged, onError, 
                         onClick={() => setMenuFor(null)}
                         className="fixed inset-0 z-10 cursor-default"
                       />
-                      <div className="absolute z-20 mt-1 max-h-56 w-64 overflow-auto rounded-md border border-zinc-700 bg-zinc-900 py-1 shadow-xl">
+                      <div className="glass-raised absolute z-20 mt-1.5 max-h-56 w-64 overflow-auto rounded-[14px] p-1.5">
                         {orderedSlots.map((s) => (
                           <button
                             key={s.uuid}
@@ -155,17 +188,17 @@ export default function LibraryPanel({ videos, slots, busy, onChanged, onError, 
                               setMenuFor(null);
                               onApplyToSlot(v, s.uuid);
                             }}
-                            className="flex w-full items-center gap-2 px-3 py-1.5 text-left text-xs text-zinc-300 transition-colors hover:bg-zinc-800"
+                            className="flex w-full items-center gap-2 rounded-[9px] px-2.5 py-2 text-left text-xs text-[var(--text-dim)] transition-colors hover:bg-[var(--glass-hover)] hover:text-[var(--text)]"
                           >
                             {s.isSelected ? (
                               <>
-                                <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-400" />
-                                <span className="text-emerald-400">Lock screen</span>
+                                <span className="live-dot" />
+                                <span className="text-[var(--live)]">Lock screen</span>
                               </>
                             ) : (
-                              <span className="font-mono text-zinc-500">{s.uuid.slice(0, 8)}</span>
+                              <span className="font-mono text-[var(--text-faint)]">{s.uuid.slice(0, 8)}</span>
                             )}
-                            <span className="ml-auto truncate pl-2 text-zinc-500">
+                            <span className="ml-auto truncate pl-2 text-[var(--text-faint)]">
                               {s.source ? s.source.name : "original"}
                             </span>
                           </button>
@@ -174,15 +207,12 @@ export default function LibraryPanel({ videos, slots, busy, onChanged, onError, 
                     </>
                   )}
                 </div>
-                <button
-                  onClick={() => rename(v)}
-                  className="rounded-md border border-zinc-800 px-3 py-1.5 text-xs text-zinc-400 transition-colors hover:bg-zinc-800 hover:text-zinc-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400"
-                >
+                <button onClick={() => rename(v)} className="btn btn-ghost px-3 py-1.5 text-xs">
                   Rename
                 </button>
                 <button
                   onClick={() => remove(v)}
-                  className="ml-auto rounded-md border border-zinc-800 px-3 py-1.5 text-xs text-zinc-500 transition-colors hover:border-red-900 hover:text-red-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400"
+                  className="btn btn-ghost btn-danger ml-auto px-3 py-1.5 text-xs"
                 >
                   Delete
                 </button>
@@ -191,7 +221,16 @@ export default function LibraryPanel({ videos, slots, busy, onChanged, onError, 
           );
         })}
       </ul>
-      {shown.length === 0 && <p className="text-sm text-zinc-500">No videos.</p>}
+      {shown.length === 0 && <p className="px-1 py-8 text-center text-sm text-[var(--text-dim)]">No videos.</p>}
+
+      {/* drag-and-drop overlay */}
+      {dragging && (
+        <div className="pointer-events-none absolute inset-0 z-30 flex items-center justify-center rounded-[24px] border-2 border-dashed border-[var(--accent-hi)] bg-[color-mix(in_oklab,var(--accent)_18%,transparent)] backdrop-blur-md">
+          <span className="rounded-full bg-black/50 px-5 py-2.5 text-sm font-medium text-[var(--text)]">
+            Drop video files to upload
+          </span>
+        </div>
+      )}
     </section>
   );
 }
