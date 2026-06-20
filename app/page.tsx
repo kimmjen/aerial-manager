@@ -22,6 +22,7 @@ export default function Home() {
   const [slots, setSlots] = useState<SlotInfo[]>([]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
   const [replaceState, setReplaceState] = useState<ReplaceState>("idle");
   const replaceInput = useRef<HTMLInputElement>(null);
 
@@ -140,6 +141,34 @@ export default function Home() {
     }
   }
 
+  /** Re-apply every custom slot through the current normalization (fixes stale/incompatible slots). */
+  async function reapplyAllSlots() {
+    if (
+      !confirm(
+        "Re-apply all custom slots with the latest compatibility fixes? Large videos are re-encoded, so this can take a few minutes.",
+      )
+    )
+      return;
+    setBusy(true);
+    setError(null);
+    setNotice(null);
+    try {
+      const res = await fetch("/api/slots/reapply", { method: "POST" });
+      const body = await res.json();
+      if (!res.ok) throw new Error(body.error);
+      const results: { ok: boolean; name: string; error?: string }[] = body.results ?? [];
+      const ok = results.filter((r) => r.ok).length;
+      const failed = results.filter((r) => !r.ok);
+      setNotice(`Re-applied ${ok} slot${ok === 1 ? "" : "s"}${failed.length ? ` · ${failed.length} failed` : ""}.`);
+      if (failed.length) setError(failed.map((f) => `${f.name}: ${f.error}`).join("; "));
+      await refresh();
+    } catch (e) {
+      setError(String(e));
+    } finally {
+      setBusy(false);
+    }
+  }
+
   const replaceBusy = busy || replaceState !== "idle";
   const liveSlot = slots.find((s) => s.isSelected) ?? null;
   const otherSlots = slots.filter((s) => !s.isSelected);
@@ -162,6 +191,14 @@ export default function Home() {
           <p className="hidden text-[11px] text-[var(--text-faint)] sm:block">macOS lock screen videos</p>
         </div>
         <div className="ml-auto flex items-center gap-2">
+          <button
+            onClick={reapplyAllSlots}
+            disabled={busy || !slots.some((s) => s.source)}
+            title="Re-encode and re-apply every custom slot with the latest compatibility fixes"
+            className="btn btn-ghost px-3.5 py-2 text-xs"
+          >
+            Re-apply all
+          </button>
           <button onClick={refresh} disabled={busy} className="btn btn-ghost px-3.5 py-2 text-xs">
             Refresh
           </button>
@@ -190,6 +227,15 @@ export default function Home() {
           <span className="h-2 w-2 shrink-0 rounded-full" style={{ background: "var(--danger)" }} />
           <span className="min-w-0 text-[var(--text)]">{error}</span>
           <button onClick={() => setError(null)} className="btn btn-ghost ml-auto shrink-0 px-3 py-1 text-xs">
+            Dismiss
+          </button>
+        </div>
+      )}
+      {notice && (
+        <div className="glass mb-4 flex items-center gap-2 rounded-2xl px-4 py-3 text-sm">
+          <span className="h-2 w-2 shrink-0 rounded-full" style={{ background: "var(--live)" }} />
+          <span className="min-w-0 text-[var(--text)]">{notice}</span>
+          <button onClick={() => setNotice(null)} className="btn btn-ghost ml-auto shrink-0 px-3 py-1 text-xs">
             Dismiss
           </button>
         </div>
