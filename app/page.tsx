@@ -145,22 +145,30 @@ export default function Home() {
   const otherSlots = slots.filter((s) => !s.isSelected);
 
   return (
-    <main className="mx-auto max-w-6xl p-6">
-      <header className="mb-6 flex items-center gap-3">
-        <h1 className="text-base font-semibold tracking-tight">Aerial Manager</h1>
-        <p className="text-xs text-zinc-500">Manage your macOS lock screen videos</p>
+    <main className="mx-auto w-full max-w-6xl px-5 pb-24 pt-5 sm:px-8">
+      <header className="reveal glass-raised sticky top-4 z-40 mb-8 flex items-center gap-3 rounded-full px-3.5 py-2.5 sm:px-5">
+        <span
+          aria-hidden
+          className="grid h-8 w-8 place-items-center rounded-[10px] shadow-md"
+          style={{ background: "linear-gradient(140deg, var(--accent-hi), #14b8c6)" }}
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+            <path d="M3 19l5.5-8 4 5 3-4 5.5 7z" />
+            <circle cx="7.5" cy="6.5" r="2" />
+          </svg>
+        </span>
+        <div className="leading-tight">
+          <h1 className="text-sm font-semibold tracking-tight text-[var(--text)]">Aerial Manager</h1>
+          <p className="hidden text-[11px] text-[var(--text-faint)] sm:block">macOS lock screen videos</p>
+        </div>
         <div className="ml-auto flex items-center gap-2">
-          <button
-            onClick={refresh}
-            disabled={busy}
-            className="rounded-md border border-zinc-700 px-3 py-1.5 text-xs text-zinc-300 transition-colors hover:bg-zinc-800 disabled:pointer-events-none disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400"
-          >
+          <button onClick={refresh} disabled={busy} className="btn btn-ghost px-3.5 py-2 text-xs">
             Refresh
           </button>
           <button
             onClick={() => replaceInput.current?.click()}
             disabled={replaceBusy || slots.length === 0}
-            className="rounded-md bg-zinc-100 px-4 py-1.5 text-sm font-medium text-zinc-900 transition-colors hover:bg-white disabled:pointer-events-none disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400"
+            className="btn btn-primary px-4 py-2 text-sm"
           >
             {REPLACE_LABELS[replaceState]}
           </button>
@@ -178,32 +186,39 @@ export default function Home() {
       </header>
 
       {error && (
-        <div className="mb-4 rounded-md border border-red-800 bg-red-950/40 px-3 py-2 text-sm text-red-300">
-          {error}
-          <button onClick={() => setError(null)} className="ml-2 text-red-400/80 underline">
+        <div className="glass mb-4 flex items-center gap-2 rounded-2xl px-4 py-3 text-sm">
+          <span className="h-2 w-2 shrink-0 rounded-full" style={{ background: "var(--danger)" }} />
+          <span className="min-w-0 text-[var(--text)]">{error}</span>
+          <button onClick={() => setError(null)} className="btn btn-ghost ml-auto shrink-0 px-3 py-1 text-xs">
             Dismiss
           </button>
         </div>
       )}
       {busy && (
-        <div className="mb-4 rounded-md border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-300">
-          <span className="mr-2 inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-zinc-400" />
+        <div className="glass mb-4 flex items-center gap-2.5 rounded-2xl px-4 py-3 text-sm text-[var(--text-dim)]">
+          <span className="h-2 w-2 animate-pulse rounded-full" style={{ background: "var(--accent)" }} />
           Applying… (remuxing video + restarting WallpaperAgent)
         </div>
       )}
 
-      <LiveHero slot={liveSlot} busy={busy} onAction={runAction} />
+      <div className="reveal" style={{ animationDelay: "0.06s" }}>
+        <LiveHero slot={liveSlot} busy={busy} onAction={runAction} />
+      </div>
 
-      <div className="grid grid-cols-1 gap-8 lg:grid-cols-[3fr_2fr]">
-        <LibraryPanel
-          videos={videos}
-          slots={slots}
-          busy={busy}
-          onChanged={refresh}
-          onError={setError}
-          onApplyToSlot={applyVideoToSlot}
-        />
-        <SlotBoard slots={otherSlots} busy={busy} onAction={runAction} onReplaceSlot={replaceSlotWithFile} />
+      <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-[320px_1fr]">
+        <div className="reveal order-2 lg:order-1" style={{ animationDelay: "0.14s" }}>
+          <SlotBoard slots={otherSlots} busy={busy} onAction={runAction} onReplaceSlot={replaceSlotWithFile} />
+        </div>
+        <div className="reveal order-1 lg:order-2" style={{ animationDelay: "0.1s" }}>
+          <LibraryPanel
+            videos={videos}
+            slots={slots}
+            busy={busy}
+            onChanged={refresh}
+            onError={setError}
+            onApplyToSlot={applyVideoToSlot}
+          />
+        </div>
       </div>
     </main>
   );

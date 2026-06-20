@@ -4,6 +4,14 @@ export function formatSize(bytes: number | null): string {
   return `${Math.round(bytes / 1024)} KB`;
 }
 
+/** "1920×1080 · 30fps", or whichever parts are known. */
+export function formatVideoSpec(width: number | null, height: number | null, fps: number | null): string | null {
+  const parts: string[] = [];
+  if (width && height) parts.push(`${width}×${height}`);
+  if (fps) parts.push(`${Math.round(fps)}fps`);
+  return parts.length ? parts.join(" · ") : null;
+}
+
 export function streamUrl(dir: string, name: string, version?: number): string {
   const v = version ? `&v=${Math.round(version)}` : "";
   return `/api/library/stream?dir=${dir}&name=${encodeURIComponent(name)}${v}`;

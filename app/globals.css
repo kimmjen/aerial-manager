@@ -5,11 +5,299 @@
   --font-mono: var(--font-geist-mono);
 }
 
-/* dark-only app: keep native UI (video controls, scrollbars, dialogs) dark too */
+/*
+ * Liquid Glass — a macOS 26 (Tahoe) inspired design language.
+ * Glass materials float over a slow-drifting cool aurora so the
+ * backdrop-filter has color to refract. Dark-only by design.
+ */
 :root {
   color-scheme: dark;
+
+  --bg: #07080c;
+  --text: #f4f6fa;
+  --text-dim: #aab2c0;
+  --text-faint: #717886;
+
+  --accent: #0a84ff; /* macOS dark-mode system blue */
+  --accent-hi: #409cff;
+  --live: #32d74b; /* macOS green */
+  --danger: #ff453a; /* macOS red */
+  --warn: #ffd60a; /* macOS yellow */
+
+  --glass: color-mix(in oklab, white 6%, transparent);
+  --glass-strong: color-mix(in oklab, white 10%, transparent);
+  --glass-hover: color-mix(in oklab, white 14%, transparent);
+  --glass-border: color-mix(in oklab, white 14%, transparent);
+  --glass-border-hi: color-mix(in oklab, white 24%, transparent);
+
+  --blur: 28px;
+  --highlight: inset 0 1px 0 0 color-mix(in oklab, white 20%, transparent);
+  --shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.6), 0 2px 8px -2px rgba(0, 0, 0, 0.45);
+  --shadow-lg: 0 28px 80px -16px rgba(0, 0, 0, 0.75);
 }
 
 body {
+  position: relative;
+  min-height: 100dvh;
+  background: var(--bg);
+  color: var(--text);
   font-family: var(--font-geist-sans), system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Drifting aurora — sits above the base bg, behind all content */
+body::before {
+  content: "";
+  position: fixed;
+  inset: -25%;
+  z-index: -2;
+  background:
+    radial-gradient(38% 48% at 16% 18%, color-mix(in oklab, #2d6cff 60%, transparent), transparent 72%),
+    radial-gradient(42% 52% at 86% 10%, color-mix(in oklab, #19c2c9 48%, transparent), transparent 72%),
+    radial-gradient(48% 58% at 78% 90%, color-mix(in oklab, #7c5cff 48%, transparent), transparent 72%),
+    radial-gradient(44% 50% at 8% 94%, color-mix(in oklab, #ff5c8a 32%, transparent), transparent 72%);
+  filter: saturate(125%);
+  animation: drift 34s ease-in-out infinite alternate;
+}
+
+/* Fine film grain for atmosphere */
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  opacity: 0.045;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+@layer components {
+  /* Core glass material. Pair with a border-radius utility so blur clips. */
+  .glass {
+    background: var(--glass);
+    backdrop-filter: blur(var(--blur)) saturate(180%);
+    -webkit-backdrop-filter: blur(var(--blur)) saturate(180%);
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--highlight), var(--shadow);
+  }
+
+  .glass-raised {
+    background: var(--glass-strong);
+    backdrop-filter: blur(40px) saturate(190%);
+    -webkit-backdrop-filter: blur(40px) saturate(190%);
+    border: 1px solid var(--glass-border-hi);
+    box-shadow: var(--highlight), var(--shadow-lg);
+  }
+
+  /* Hover lift for interactive cards */
+  .lift {
+    transition:
+      transform 0.28s cubic-bezier(0.2, 0.7, 0.2, 1),
+      border-color 0.28s ease,
+      box-shadow 0.28s ease;
+  }
+  .lift:hover {
+    transform: translateY(-3px);
+    border-color: var(--glass-border-hi);
+  }
+
+  /* Buttons — macOS pill shape. Sizing/padding stay in markup. */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    border-radius: 999px;
+    font-weight: 500;
+    line-height: 1;
+    white-space: nowrap;
+    cursor: pointer;
+    transition:
+      background-color 0.18s ease,
+      border-color 0.18s ease,
+      color 0.18s ease,
+      transform 0.12s ease;
+  }
+  .btn:active {
+    transform: scale(0.97);
+  }
+  .btn:focus-visible {
+    outline: 2px solid var(--accent-hi);
+    outline-offset: 2px;
+  }
+  .btn:disabled {
+    opacity: 0.4;
+    pointer-events: none;
+  }
+
+  .btn-primary {
+    background: var(--accent);
+    color: #fff;
+    box-shadow:
+      inset 0 1px 0 color-mix(in oklab, white 35%, transparent),
+      0 6px 20px -6px color-mix(in oklab, var(--accent) 75%, transparent);
+  }
+  .btn-primary:hover {
+    background: var(--accent-hi);
+  }
+
+  .btn-glass {
+    background: var(--glass-strong);
+    backdrop-filter: blur(16px) saturate(170%);
+    -webkit-backdrop-filter: blur(16px) saturate(170%);
+    border: 1px solid var(--glass-border);
+    color: var(--text);
+    box-shadow: var(--highlight);
+  }
+  .btn-glass:hover {
+    background: var(--glass-hover);
+    border-color: var(--glass-border-hi);
+  }
+
+  .btn-ghost {
+    color: var(--text-dim);
+    border: 1px solid transparent;
+  }
+  .btn-ghost:hover {
+    color: var(--text);
+    background: var(--glass);
+  }
+
+  .btn-danger:hover {
+    color: var(--danger);
+    background: color-mix(in oklab, var(--danger) 12%, transparent);
+    border-color: color-mix(in oklab, var(--danger) 45%, transparent);
+  }
+
+  /* Segmented control (dir filter) */
+  .segmented {
+    display: inline-flex;
+    gap: 2px;
+    padding: 3px;
+    border-radius: 999px;
+    background: var(--glass);
+    border: 1px solid var(--glass-border);
+    backdrop-filter: blur(16px) saturate(170%);
+    -webkit-backdrop-filter: blur(16px) saturate(170%);
+  }
+  .segmented button {
+    border-radius: 999px;
+    padding: 0.3rem 0.75rem;
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--text-dim);
+    transition:
+      background-color 0.18s ease,
+      color 0.18s ease;
+  }
+  .segmented button:hover {
+    color: var(--text);
+  }
+  .segmented button[data-active="true"] {
+    color: var(--text);
+    background: var(--glass-hover);
+    box-shadow: var(--highlight), 0 1px 4px rgba(0, 0, 0, 0.3);
+  }
+  .segmented button:focus-visible {
+    outline: 2px solid var(--accent-hi);
+    outline-offset: 1px;
+  }
+
+  /* Sidebar / section heading */
+  .section-title {
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+  }
+
+  /* Live indicator dot */
+  .live-dot {
+    position: relative;
+    display: inline-block;
+    height: 0.5rem;
+    width: 0.5rem;
+    border-radius: 999px;
+    background: var(--live);
+    box-shadow: 0 0 0 0 color-mix(in oklab, var(--live) 70%, transparent);
+    animation: pulse 2.4s ease-out infinite;
+  }
+}
+
+/* Staggered page-load reveal */
+.reveal {
+  opacity: 0;
+  animation: rise 0.62s cubic-bezier(0.2, 0.7, 0.2, 1) forwards;
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes drift {
+  from {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  to {
+    transform: translate3d(0, -4%, 0) scale(1.08);
+  }
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 color-mix(in oklab, var(--live) 70%, transparent);
+  }
+  70% {
+    box-shadow: 0 0 0 7px color-mix(in oklab, var(--live) 0%, transparent);
+  }
+  100% {
+    box-shadow: 0 0 0 0 color-mix(in oklab, var(--live) 0%, transparent);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body::before {
+    animation: none;
+  }
+  .reveal {
+    animation: none;
+    opacity: 1;
+  }
+  .live-dot {
+    animation: none;
+  }
+  .btn:active {
+    transform: none;
+  }
+}
+
+::selection {
+  background: color-mix(in oklab, var(--accent) 40%, transparent);
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--glass-border-hi);
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: color-mix(in oklab, white 32%, transparent);
+  background-clip: content-box;
 }
