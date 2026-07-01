@@ -1,11 +1,10 @@
 import type { VideoMeta } from "./codec";
 
-// Codecs that AVFoundation plays on the lock screen AND that can live in a .mov container.
-// Anything else (av1, vp9, …) must be re-encoded.
+// Codecs that can live in a .mov container. Used for library status/reformat.
 const MOV_COMPATIBLE = new Set(["h264", "hevc"]);
 
-// Apple aerials are HEVC, ≤30fps. The lock-screen decoder is tuned for that envelope:
-// H.264 at 4K, or anything above 30fps, overloads it and stutters/freezes.
+// macOS Tahoe aerials are HEVC. The lock-screen renderer only plays HEVC reliably —
+// H.264 in a slot shows a black/frozen screen — so slots are always written as HEVC.
 const MAX_FPS = 30;
 const MAX_PIXELS = 1920 * 1080;
 
@@ -14,7 +13,7 @@ const MAX_PIXELS = 1920 * 1080;
 const FILL_ASPECT_MAX = 1.6;
 
 // Fit oversized frames within 1080p, preserve aspect, never upscale; keep even
-// dimensions for H.264. Single quotes protect the commas inside min() from the parser.
+// dimensions. Single quotes protect the commas inside min() from the parser.
 const DOWNSCALE_VF =
   "scale='min(1920,iw)':'min(1080,ih)':force_original_aspect_ratio=decrease,scale=trunc(iw/2)*2:trunc(ih/2)*2";
 
@@ -30,15 +29,6 @@ export function isMovCompatible(codec: string | null): boolean {
   return codec !== null && MOV_COMPATIBLE.has(codec.toLowerCase());
 }
 
-function isHeavyH264(meta: VideoMeta): boolean {
-  return (
-    meta.codec?.toLowerCase() === "h264" &&
-    meta.width != null &&
-    meta.height != null &&
-    meta.width * meta.height > MAX_PIXELS
-  );
-}
-
 /** True when the source is tall/square enough to need blur-padding to 16:9. */
 function needsFill(meta: VideoMeta): boolean {
   if (meta.width == null || meta.height == null) return false;
@@ -51,51 +41,60 @@ function isOversized(meta: VideoMeta | undefined): boolean {
 
 /**
  * True when the source can be stream-copied straight into a lock-screen .mov:
- * compatible codec, ≤30fps, not 4K-class H.264 (decoder chokes), and not so
- * tall/square that it would pillarbox into mostly black. Unknown dims/fps don't
- * block the fast path.
+ * it must already be HEVC (the renderer needs it) and a landscape-ish aspect
+ * (otherwise we blur-pad it). Unknown dimensions don't block the fast path.
  */
 export function isLockScreenReady(meta: VideoMeta): boolean {
-  if (!isMovCompatible(meta.codec)) return false;
-  if (meta.fps != null && meta.fps > MAX_FPS) return false;
-  if (isHeavyH264(meta)) return false;
+  if (meta.codec?.toLowerCase() !== "hevc") return false;
   if (needsFill(meta)) return false;
   return true;
 }
 
+/** Scale/pad filter args for a normalized re-encode (empty when no change needed). */
+function videoFilterArgs(meta?: VideoMeta): string[] {
+  if (meta && needsFill(meta)) return ["-filter_complex", FILL_FC, "-map", "[v]"];
+  if (isOversized(meta)) return ["-vf", DOWNSCALE_VF];
+  return [];
+}
+
+function fpsCapArgs(meta?: VideoMeta): string[] {
+  return meta?.fps != null && meta.fps > MAX_FPS ? ["-r", String(MAX_FPS)] : [];
+}
+
 /**
- * Re-encode `src` to H.264 via VideoToolbox (hardware-accelerated on macOS).
- * With `meta`: portrait/near-square sources are blur-padded to 16:9, oversized
- * frames are scaled to fit 1080p, and high frame rates are capped — keeping the
- * lock-screen decode load sane. Without `meta`, it is a plain re-encode.
+ * Re-encode `src` to H.264 via VideoToolbox. Used for the in-place library
+ * reformat (browser-previewable). With `meta`, oversized frames are scaled to
+ * fit 1080p, tall/square sources are blur-padded, and high frame rates capped.
  */
 export function reencodeArgs(src: string, out: string, meta?: VideoMeta): string[] {
-  const args = ["-y", "-loglevel", "error", "-i", src, "-an"];
+  return [
+    "-y", "-loglevel", "error", "-i", src, "-an",
+    ...videoFilterArgs(meta),
+    "-c:v", "h264_videotoolbox", "-b:v", "20M", "-tag:v", "avc1",
+    ...fpsCapArgs(meta),
+    "-movflags", "+faststart", out,
+  ];
+}
 
-  if (meta && needsFill(meta)) {
-    args.push("-filter_complex", FILL_FC, "-map", "[v]");
-  } else if (isOversized(meta)) {
-    args.push("-vf", DOWNSCALE_VF);
-  }
-
-  args.push("-c:v", "h264_videotoolbox", "-b:v", "20M", "-tag:v", "avc1");
-
-  if (meta?.fps != null && meta.fps > MAX_FPS) {
-    args.push("-r", String(MAX_FPS));
-  }
-
-  args.push("-movflags", "+faststart", out);
-  return args;
+/** Re-encode `src` to HEVC (hvc1) for a lock-screen slot, with the same normalization. */
+function hevcSlotArgs(src: string, out: string, meta?: VideoMeta): string[] {
+  return [
+    "-y", "-loglevel", "error", "-i", src, "-an",
+    ...videoFilterArgs(meta),
+    "-c:v", "hevc_videotoolbox", "-b:v", "12M", "-tag:v", "hvc1", "-pix_fmt", "yuv420p",
+    ...fpsCapArgs(meta),
+    "-movflags", "+faststart", out,
+  ];
 }
 
 /**
  * ffmpeg args to produce a lock-screen-ready .mov at `out` from `src`.
- * Lock-screen-ready sources are stream-copied (fast, lossless); others are
- * re-encoded and normalized to the aerial decode envelope.
+ * HEVC landscape sources are stream-copied (fast, lossless); everything else is
+ * re-encoded to HEVC (the format the lock-screen renderer plays) and normalized.
  */
 export function ffmpegArgs(meta: VideoMeta, src: string, out: string): string[] {
   if (isLockScreenReady(meta)) {
     return ["-y", "-loglevel", "error", "-i", src, "-c", "copy", "-movflags", "+faststart", out];
   }
-  return reencodeArgs(src, out, meta);
+  return hevcSlotArgs(src, out, meta);
 }
