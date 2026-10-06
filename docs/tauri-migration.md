@@ -72,7 +72,7 @@ src-tauri/
 
 각 PR이 끝나도 앱은 동작하는 상태를 유지한다. Next는 5번까지 그대로 둔다.
 
-1. **스캐폴드**: `src-tauri/`와 Vite 프런트를 만들고 컴포넌트를 옮긴다. 데이터 없이 창만 뜬다.
+1. **스캐폴드**: `src-tauri/`와 Vite 프런트를 만든다. Next가 계속 동작하도록 컴포넌트는 옮기지 않고 `app/page.tsx`를 그대로 렌더링한다(이동은 6번에서). 데이터 없이 창만 뜬다.
    - 확인: `npm run tauri dev`로 기존과 같은 UI가 뜬다.
 2. **Rust 코어(순수 함수)**: config, paths, mapping, transcode, codec 파싱. 기존 vitest 테스트(`config`, `mapping`, `transcode`, `status`, `library`)를 Rust 단위 테스트로 옮긴다. `stream`은 asset 프로토콜로 대체되므로 삭제한다.
    - 확인: `cargo test`, 기존 테스트 케이스와 1:1 대응.

@@ -43,3 +43,6 @@ next-env.d.ts
 # per-user runtime state (slot -> source video mapping)
 /data/
 !.env.example
+dist
+src-tauri/target
+src-tauri/gen
