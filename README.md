@@ -60,7 +60,7 @@ The app maintains a `data/slots.json` mapping of which of your videos is inside 
 - Thumbnails in System Settings still show Apple's original previews; the played video is yours.
 - macOS updates or wallpaper re-downloads may overwrite replaced slots — just re-apply.
 - Videos are converted to **HEVC** when applied to a slot — the macOS Tahoe lock-screen renderer only plays HEVC reliably (an H.264 slot shows a black/frozen screen). Slot previews in the web UI therefore need Safari; the library keeps H.264 sources for broad browser preview.
-- The lock-screen aerial sometimes fails to resume after the Mac sleeps — a macOS issue that affects Apple's own aerials too (re-locking with Ctrl+Cmd+Q brings it back). Optional fix: auto-restart the wallpaper agent on system or display wake with `sh scripts/install-wake-helper.sh` (needs the Xcode command line tools; log at `~/.aerial-manager/wake.log`).
+- The lock-screen aerial sometimes fails to resume after the Mac sleeps — a macOS issue that affects Apple's own aerials too (re-locking with Ctrl+Cmd+Q brings it back). Optional fix: auto-restart the wallpaper agent whenever the screen locks or wakes with `sh scripts/install-wake-helper.sh` (needs the Xcode command line tools; log at `~/.aerial-manager/wake.log`).
 - Everything happens in user-space (`~/Library`); no sudo, no SIP changes.
 
 Use at your own risk — this modifies files inside `~/Library/Application Support/com.apple.wallpaper`. Originals are always backed up to `BACKUP_DIR` before the first overwrite.

@@ -1,7 +1,7 @@
 // Aerial Manager wake watcher — works around the macOS Tahoe bug where the
 // lock-screen aerial fails to resume after sleep (black/frozen frame).
-// Restarting WallpaperAgent fixes it, so do that on system or display wake.
-// Lock/unlock events are only logged, to help diagnose when the aerial stalls.
+// Restarting WallpaperAgent fixes it (like re-locking), so do that whenever the
+// lock screen comes up or the system/display wakes. Unlock is only logged.
 import AppKit
 
 func log(_ msg: String) {
@@ -9,14 +9,20 @@ func log(_ msg: String) {
   fflush(stdout)
 }
 
+// Lock and wake often arrive together; coalesce them into one restart.
+var pendingRestart: DispatchWorkItem?
+
 func restartWallpaperAgent(after event: String) {
   log("\(event) -> restart WallpaperAgent")
-  DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+  pendingRestart?.cancel()
+  let work = DispatchWorkItem {
     let p = Process()
     p.executableURL = URL(fileURLWithPath: "/usr/bin/killall")
     p.arguments = ["WallpaperAgent"]
     try? p.run()
   }
+  pendingRestart = work
+  DispatchQueue.main.asyncAfter(deadline: .now() + 1, execute: work)
 }
 
 let ws = NSWorkspace.shared.notificationCenter
@@ -25,8 +31,11 @@ for name in [NSWorkspace.didWakeNotification, NSWorkspace.screensDidWakeNotifica
 }
 
 let dc = DistributedNotificationCenter.default()
-for name in ["com.apple.screenIsLocked", "com.apple.screenIsUnlocked"] {
-  dc.addObserver(forName: Notification.Name(name), object: nil, queue: .main) { log($0.name.rawValue) }
+dc.addObserver(forName: Notification.Name("com.apple.screenIsLocked"), object: nil, queue: .main) {
+  restartWallpaperAgent(after: $0.name.rawValue)
+}
+dc.addObserver(forName: Notification.Name("com.apple.screenIsUnlocked"), object: nil, queue: .main) {
+  log($0.name.rawValue)
 }
 
 log("ready")
