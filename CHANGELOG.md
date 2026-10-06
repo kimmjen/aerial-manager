@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Wake helper now also fires on display wake (sleepwatcher `-W`), not only system wake — a Mac on power usually only sleeps its display, so the helper never ran. Re-run `sh scripts/install-wake-helper.sh` to pick it up
+
 ## v0.4.1 — 2026-06-03
 
 - Allow LAN access to the dev server via `ALLOWED_DEV_ORIGINS` (comma-separated hosts) so a phone/another device can open it; localhost still works without any config

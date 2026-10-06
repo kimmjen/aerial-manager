@@ -10,6 +10,8 @@
     <string>__SLEEPWATCHER__</string>
     <string>-w</string>
     <string>__SCRIPT__</string>
+    <string>-W</string>
+    <string>__SCRIPT__</string>
   </array>
   <key>RunAtLoad</key>
   <true/>

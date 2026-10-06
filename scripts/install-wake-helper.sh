@@ -23,7 +23,8 @@ sed -e "s|__SLEEPWATCHER__|$SW|" -e "s|__SCRIPT__|$SCRIPT|" \
   "$HERE/com.aerial-manager.wakewatcher.plist" > "$PLIST"
 
 launchctl bootout "gui/$(id -u)/$LABEL" 2>/dev/null || true
-launchctl bootstrap "gui/$(id -u)" "$PLIST"
+# bootout returns before the job is fully gone; retry once if bootstrap races it
+launchctl bootstrap "gui/$(id -u)" "$PLIST" 2>/dev/null || { sleep 1; launchctl bootstrap "gui/$(id -u)" "$PLIST"; }
 echo "installed and loaded: $LABEL"
 echo "  sleepwatcher: $SW"
 echo "  wake script:  $SCRIPT"
