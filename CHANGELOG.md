@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Restarting WallpaperAgent on every lock is now opt-in (`install-wake-helper.sh --restart-on-lock`); wake restarts stay on. It is untested on macOS 27, where a user reports a grey desktop and black lock screen after repeated lock cycles
+- README: macOS 27 marked untested
 - Wake helper rewritten as a small native Swift watcher (`scripts/wake-watcher.swift`) that restarts WallpaperAgent whenever the lock screen comes up (same effect as re-locking) or the system/display wakes. Replaces sleepwatcher, whose hooks never fired on this setup (no system sleep; display-wake hook silent on Apple Silicon/Tahoe). Events are logged to `~/.aerial-manager/wake.log`. Re-run `sh scripts/install-wake-helper.sh`
 
 ## v0.4.1 — 2026-06-03
