@@ -8,23 +8,29 @@
     "start": "next start -p 3210",
     "lint": "eslint",
     "test": "vitest run",
-    "screenshot": "node scripts/screenshot.mjs"
+    "screenshot": "node scripts/screenshot.mjs",
+    "tauri": "tauri"
   },
   "dependencies": {
+    "@fontsource-variable/geist": "^5.3.0",
+    "@fontsource-variable/geist-mono": "^5.3.0",
     "next": "16.2.7",
     "react": "19.2.4",
     "react-dom": "19.2.4"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
+    "@tauri-apps/cli": "^2.12.1",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@vitejs/plugin-react": "^6.1.2",
     "eslint": "^9",
     "eslint-config-next": "16.2.7",
     "playwright-core": "^1.60.0",
     "tailwindcss": "^4",
     "typescript": "^5",
+    "vite": "^8.3.3",
     "vitest": "^4.1.8"
   }
 }

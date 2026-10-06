@@ -1,0 +1,5 @@
+/* Stand-ins for the CSS variables next/font defines in app/layout.tsx. */
+:root {
+  --font-geist-sans: "Geist Variable";
+  --font-geist-mono: "Geist Mono Variable";
+}
