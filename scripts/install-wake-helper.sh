@@ -1,29 +1,30 @@
 #!/bin/sh
-# Install the wake-restart helper: restarts WallpaperAgent on wake so the
+# Install the wake watcher: restarts WallpaperAgent on system/display wake so the
 # lock-screen aerial resumes (macOS Tahoe fails to resume it after sleep).
-# Requires sleepwatcher:  brew install sleepwatcher
+# Requires the Xcode command line tools (swiftc):  xcode-select --install
+# Log:        ~/.aerial-manager/wake.log
 # Uninstall:  launchctl bootout gui/$(id -u)/com.aerial-manager.wakewatcher && rm ~/Library/LaunchAgents/com.aerial-manager.wakewatcher.plist
 set -e
 HERE="$(cd "$(dirname "$0")" && pwd)"
 
-SW="$(command -v sleepwatcher || true)"
-[ -x "$SW" ] || SW="/opt/homebrew/sbin/sleepwatcher"
-[ -x "$SW" ] || { echo "sleepwatcher not found. Install it: brew install sleepwatcher"; exit 1; }
+command -v swiftc >/dev/null || { echo "swiftc not found. Install it: xcode-select --install"; exit 1; }
 
 DEST_DIR="$HOME/.aerial-manager"
-SCRIPT="$DEST_DIR/wake-restart-wallpaper.sh"
+BIN="$DEST_DIR/wake-watcher"
+LOG="$DEST_DIR/wake.log"
 LABEL="com.aerial-manager.wakewatcher"
 PLIST="$HOME/Library/LaunchAgents/$LABEL.plist"
 
 mkdir -p "$DEST_DIR" "$HOME/Library/LaunchAgents"
-cp "$HERE/wake-restart-wallpaper.sh" "$SCRIPT"
-chmod +x "$SCRIPT"
+swiftc -O -o "$BIN" "$HERE/wake-watcher.swift"
 
-sed -e "s|__SLEEPWATCHER__|$SW|" -e "s|__SCRIPT__|$SCRIPT|" \
+sed -e "s|__BIN__|$BIN|" -e "s|__LOG__|$LOG|g" \
   "$HERE/com.aerial-manager.wakewatcher.plist" > "$PLIST"
 
 launchctl bootout "gui/$(id -u)/$LABEL" 2>/dev/null || true
-launchctl bootstrap "gui/$(id -u)" "$PLIST"
+# bootout returns before the job is fully gone; retry once if bootstrap races it
+launchctl bootstrap "gui/$(id -u)" "$PLIST" 2>/dev/null || { sleep 1; launchctl bootstrap "gui/$(id -u)" "$PLIST"; }
+rm -f "$DEST_DIR/wake-restart-wallpaper.sh" # left over from the sleepwatcher version
 echo "installed and loaded: $LABEL"
-echo "  sleepwatcher: $SW"
-echo "  wake script:  $SCRIPT"
+echo "  binary: $BIN"
+echo "  log:    $LOG"

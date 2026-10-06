@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Wake helper rewritten as a small native Swift watcher (`scripts/wake-watcher.swift`) that restarts WallpaperAgent whenever the lock screen comes up (same effect as re-locking) or the system/display wakes. Replaces sleepwatcher, whose hooks never fired on this setup (no system sleep; display-wake hook silent on Apple Silicon/Tahoe). Events are logged to `~/.aerial-manager/wake.log`. Re-run `sh scripts/install-wake-helper.sh`
+
 ## v0.4.1 — 2026-06-03
 
 - Allow LAN access to the dev server via `ALLOWED_DEV_ORIGINS` (comma-separated hosts) so a phone/another device can open it; localhost still works without any config
