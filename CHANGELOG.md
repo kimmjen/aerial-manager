@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-- Wake helper now also fires on display wake (sleepwatcher `-W`), not only system wake — a Mac on power usually only sleeps its display, so the helper never ran. Re-run `sh scripts/install-wake-helper.sh` to pick it up
+- Wake helper rewritten as a small native Swift watcher (`scripts/wake-watcher.swift`) that listens for macOS system and display wake and restarts WallpaperAgent. Replaces sleepwatcher, whose hooks never fired on this setup (no system sleep; display-wake hook silent on Apple Silicon/Tahoe). Lock/unlock events are logged to `~/.aerial-manager/wake.log`. Re-run `sh scripts/install-wake-helper.sh`
 
 ## v0.4.1 — 2026-06-03
 
