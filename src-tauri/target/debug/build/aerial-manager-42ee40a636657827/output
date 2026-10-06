@@ -1,0 +1,13 @@
+cargo:rerun-if-env-changed=TAURI_CONFIG
+cargo:rustc-check-cfg=cfg(desktop)
+cargo:rustc-cfg=desktop
+cargo:rustc-check-cfg=cfg(mobile)
+cargo:rerun-if-changed=/Users/jeremy/Documents/GitHub/aerial-manager/src-tauri/tauri.conf.json
+cargo:rustc-env=TAURI_ANDROID_PACKAGE_NAME_APP_NAME=aerial_manager
+cargo:rustc-env=TAURI_ANDROID_PACKAGE_NAME_PREFIX=io_github_kimmjen
+cargo:rustc-check-cfg=cfg(dev)
+cargo:PERMISSION_FILES_PATH=/Users/jeremy/Documents/GitHub/aerial-manager/src-tauri/target/debug/build/aerial-manager-42ee40a636657827/out/app-manifest/__app__-permission-files
+cargo:rerun-if-changed=/Users/jeremy/Documents/GitHub/aerial-manager/src-tauri/capabilities
+cargo:rerun-if-env-changed=REMOVE_UNUSED_COMMANDS
+cargo:rustc-env=TAURI_ENV_TARGET_TRIPLE=aarch64-apple-darwin
+cargo:rustc-env=MACOSX_DEPLOYMENT_TARGET=10.13

@@ -1,0 +1,14 @@
+/Users/jeremy/Documents/GitHub/aerial-manager/src-tauri/target/debug/deps/thiserror-1e8c03c8bf38a34b.d: /Users/jeremy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/thiserror-2.0.21/src/lib.rs /Users/jeremy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/thiserror-2.0.21/src/aserror.rs /Users/jeremy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/thiserror-2.0.21/src/display.rs /Users/jeremy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/thiserror-2.0.21/src/var.rs /Users/jeremy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/thiserror-2.0.21/src/private.rs /Users/jeremy/Documents/GitHub/aerial-manager/src-tauri/target/debug/build/thiserror-f35eb50c2e477cbf/out/private.rs
+
+/Users/jeremy/Documents/GitHub/aerial-manager/src-tauri/target/debug/deps/libthiserror-1e8c03c8bf38a34b.rlib: /Users/jeremy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/thiserror-2.0.21/src/lib.rs /Users/jeremy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/thiserror-2.0.21/src/aserror.rs /Users/jeremy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/thiserror-2.0.21/src/display.rs /Users/jeremy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/thiserror-2.0.21/src/var.rs /Users/jeremy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/thiserror-2.0.21/src/private.rs /Users/jeremy/Documents/GitHub/aerial-manager/src-tauri/target/debug/build/thiserror-f35eb50c2e477cbf/out/private.rs
+
+/Users/jeremy/Documents/GitHub/aerial-manager/src-tauri/target/debug/deps/libthiserror-1e8c03c8bf38a34b.rmeta: /Users/jeremy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/thiserror-2.0.21/src/lib.rs /Users/jeremy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/thiserror-2.0.21/src/aserror.rs /Users/jeremy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/thiserror-2.0.21/src/display.rs /Users/jeremy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/thiserror-2.0.21/src/var.rs /Users/jeremy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/thiserror-2.0.21/src/private.rs /Users/jeremy/Documents/GitHub/aerial-manager/src-tauri/target/debug/build/thiserror-f35eb50c2e477cbf/out/private.rs
+
+/Users/jeremy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/thiserror-2.0.21/src/lib.rs:
+/Users/jeremy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/thiserror-2.0.21/src/aserror.rs:
+/Users/jeremy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/thiserror-2.0.21/src/display.rs:
+/Users/jeremy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/thiserror-2.0.21/src/var.rs:
+/Users/jeremy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/thiserror-2.0.21/src/private.rs:
+/Users/jeremy/Documents/GitHub/aerial-manager/src-tauri/target/debug/build/thiserror-f35eb50c2e477cbf/out/private.rs:
+
+# env-dep:OUT_DIR=/Users/jeremy/Documents/GitHub/aerial-manager/src-tauri/target/debug/build/thiserror-f35eb50c2e477cbf/out

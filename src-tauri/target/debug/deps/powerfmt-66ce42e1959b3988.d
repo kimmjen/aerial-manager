@@ -1,0 +1,11 @@
+/Users/jeremy/Documents/GitHub/aerial-manager/src-tauri/target/debug/deps/powerfmt-66ce42e1959b3988.d: /Users/jeremy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/powerfmt-0.2.1/src/lib.rs /Users/jeremy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/powerfmt-0.2.1/src/buf.rs /Users/jeremy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/powerfmt-0.2.1/src/ext.rs /Users/jeremy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/powerfmt-0.2.1/src/smart_display.rs /Users/jeremy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/powerfmt-0.2.1/src/smart_display_impls.rs
+
+/Users/jeremy/Documents/GitHub/aerial-manager/src-tauri/target/debug/deps/libpowerfmt-66ce42e1959b3988.rlib: /Users/jeremy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/powerfmt-0.2.1/src/lib.rs /Users/jeremy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/powerfmt-0.2.1/src/buf.rs /Users/jeremy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/powerfmt-0.2.1/src/ext.rs /Users/jeremy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/powerfmt-0.2.1/src/smart_display.rs /Users/jeremy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/powerfmt-0.2.1/src/smart_display_impls.rs
+
+/Users/jeremy/Documents/GitHub/aerial-manager/src-tauri/target/debug/deps/libpowerfmt-66ce42e1959b3988.rmeta: /Users/jeremy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/powerfmt-0.2.1/src/lib.rs /Users/jeremy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/powerfmt-0.2.1/src/buf.rs /Users/jeremy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/powerfmt-0.2.1/src/ext.rs /Users/jeremy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/powerfmt-0.2.1/src/smart_display.rs /Users/jeremy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/powerfmt-0.2.1/src/smart_display_impls.rs
+
+/Users/jeremy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/powerfmt-0.2.1/src/lib.rs:
+/Users/jeremy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/powerfmt-0.2.1/src/buf.rs:
+/Users/jeremy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/powerfmt-0.2.1/src/ext.rs:
+/Users/jeremy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/powerfmt-0.2.1/src/smart_display.rs:
+/Users/jeremy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/powerfmt-0.2.1/src/smart_display_impls.rs:
