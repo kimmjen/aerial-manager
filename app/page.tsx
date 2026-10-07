@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import type { LibraryDirKey } from "@/lib/config";
 import type { LibraryVideo } from "@/lib/library";
 import type { SlotInfo } from "@/lib/slots";
+import { api } from "./api";
 import LibraryPanel from "./components/LibraryPanel";
 import LiveHero from "./components/LiveHero";
 import SlotBoard from "./components/SlotBoard";
@@ -27,12 +28,13 @@ export default function Home() {
   const replaceInput = useRef<HTMLInputElement>(null);
 
   const refresh = useCallback(async () => {
-    const [lib, sl] = await Promise.all([
-      fetch("/api/library").then((r) => r.json()),
-      fetch("/api/slots").then((r) => r.json()),
-    ]);
-    if (Array.isArray(lib)) setVideos(lib);
-    if (Array.isArray(sl)) setSlots(sl);
+    try {
+      const [lib, sl] = await Promise.all([api.library(), api.slots()]);
+      setVideos(lib);
+      setSlots(sl);
+    } catch (e) {
+      setError(String(e));
+    }
   }, []);
 
   useEffect(() => {
@@ -49,13 +51,11 @@ export default function Home() {
     return () => clearInterval(id);
   }, [anyConverting, refresh]);
 
-  async function runAction(run: () => Promise<Response>) {
+  async function runAction(run: () => Promise<unknown>) {
     setBusy(true);
     setError(null);
     try {
-      const res = await run();
-      const body = await res.json();
-      if (!res.ok) throw new Error(body.error);
+      await run();
       await refresh();
     } catch (e) {
       setError(String(e));
@@ -68,7 +68,7 @@ export default function Home() {
   async function uploadVideo(file: File): Promise<{ dir: LibraryDirKey; name: string }> {
     const form = new FormData();
     form.append("files", file);
-    const res = await fetch("/api/library/upload", { method: "POST", body: form });
+    const res = await api.upload(form);
     const body = await res.json();
     if (!res.ok && res.status !== 409) throw new Error(body.error);
     return {
@@ -77,15 +77,7 @@ export default function Home() {
     };
   }
 
-  async function applySlot(uuid: string, dir: LibraryDirKey, name: string) {
-    const res = await fetch("/api/slots/apply", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ uuid, dir, name }),
-    });
-    const body = await res.json();
-    if (!res.ok) throw new Error(body.error);
-  }
+  const applySlot = api.apply;
 
   /** Apply a library video to a chosen slot. */
   async function applyVideoToSlot(v: LibraryVideo, uuid: string) {
@@ -153,10 +145,7 @@ export default function Home() {
     setError(null);
     setNotice(null);
     try {
-      const res = await fetch("/api/slots/reapply", { method: "POST" });
-      const body = await res.json();
-      if (!res.ok) throw new Error(body.error);
-      const results: { ok: boolean; name: string; error?: string }[] = body.results ?? [];
+      const results = await api.reapplyAll();
       const ok = results.filter((r) => r.ok).length;
       const failed = results.filter((r) => !r.ok);
       setNotice(`Re-applied ${ok} slot${ok === 1 ? "" : "s"}${failed.length ? ` · ${failed.length} failed` : ""}.`);

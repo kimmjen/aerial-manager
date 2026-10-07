@@ -5,7 +5,8 @@ import type { LibraryVideo } from "@/lib/library";
 import type { LibraryDirKey } from "@/lib/config";
 import type { SlotInfo } from "@/lib/slots";
 import HoverVideo from "./HoverVideo";
-import { formatSize, formatVideoSpec, streamUrl } from "./format";
+import { api } from "../api";
+import { formatSize, formatVideoSpec } from "./format";
 
 interface Props {
   videos: LibraryVideo[];
@@ -42,7 +43,7 @@ export default function LibraryPanel({ videos, slots, busy, onChanged, onError, 
     try {
       const form = new FormData();
       for (const f of Array.from(files)) form.append("files", f);
-      const res = await fetch("/api/library/upload", { method: "POST", body: form });
+      const res = await api.upload(form);
       const body = await res.json();
       if (!res.ok) throw new Error(body.error);
       onChanged();
@@ -57,26 +58,22 @@ export default function LibraryPanel({ videos, slots, busy, onChanged, onError, 
   async function rename(v: LibraryVideo) {
     const newName = prompt("New name (with extension)", v.name);
     if (!newName || newName === v.name) return;
-    const res = await fetch("/api/library/file", {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ dir: v.dir, name: v.name, newName }),
-    });
-    const body = await res.json();
-    if (!res.ok) return onError(body.error);
-    onChanged();
+    try {
+      await api.rename(v.dir, v.name, newName);
+      onChanged();
+    } catch (e) {
+      onError(String(e));
+    }
   }
 
   async function remove(v: LibraryVideo) {
     if (!confirm(`Delete "${v.name}"?`)) return;
-    const res = await fetch("/api/library/file", {
-      method: "DELETE",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ dir: v.dir, name: v.name }),
-    });
-    const body = await res.json();
-    if (!res.ok) return onError(body.error);
-    onChanged();
+    try {
+      await api.remove(v.dir, v.name);
+      onChanged();
+    } catch (e) {
+      onError(String(e));
+    }
   }
 
   return (
@@ -144,7 +141,7 @@ export default function LibraryPanel({ videos, slots, busy, onChanged, onError, 
               <div className="relative mb-2.5">
                 <HoverVideo
                   key={v.mtime}
-                  src={streamUrl(v.dir, v.name, v.mtime)}
+                  src={api.libraryVideoUrl(v.dir, v.name, v.mtime)}
                   className="aspect-video w-full rounded-[12px] bg-black object-cover"
                 />
                 {v.status !== "ready" &&

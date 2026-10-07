@@ -11,8 +11,3 @@ export function formatVideoSpec(width: number | null, height: number | null, fps
   if (fps) parts.push(`${Math.round(fps)}fps`);
   return parts.length ? parts.join(" · ") : null;
 }
-
-export function streamUrl(dir: string, name: string, version?: number): string {
-  const v = version ? `&v=${Math.round(version)}` : "";
-  return `/api/library/stream?dir=${dir}&name=${encodeURIComponent(name)}${v}`;
-}

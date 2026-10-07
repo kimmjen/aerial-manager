@@ -5,7 +5,7 @@
   "identifier": "io.github.kimmjen.aerial-manager",
   "build": {
     "beforeDevCommand": "npx vite",
-    "devUrl": "http://localhost:1420",
+    "devUrl": "http://localhost:1430",
     "beforeBuildCommand": "npx vite build",
     "frontendDist": "../dist"
   },
@@ -13,7 +13,7 @@
     "windows": [
       { "title": "Aerial Manager", "width": 1280, "height": 860, "minWidth": 900, "minHeight": 600 }
     ],
-    "security": { "csp": null }
+    "security": { "csp": null, "assetProtocol": { "enable": true, "scope": [] } }
   },
   "bundle": {
     "active": true,
