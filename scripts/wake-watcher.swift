@@ -1,7 +1,9 @@
 // Aerial Manager wake watcher — works around the macOS Tahoe bug where the
 // lock-screen aerial fails to resume after sleep (black/frozen frame).
-// Restarting WallpaperAgent fixes it (like re-locking), so do that whenever the
-// lock screen comes up or the system/display wakes. Unlock is only logged.
+// Restarting WallpaperAgent fixes it, so do that when the system/display wakes.
+// With --restart-on-lock it also restarts whenever the lock screen comes up (same
+// effect as re-locking); off by default because it is untested on macOS 27, where
+// a user saw a grey desktop / black lock screen after repeated lock cycles.
 import AppKit
 
 func log(_ msg: String) {
@@ -31,12 +33,13 @@ for name in [NSWorkspace.didWakeNotification, NSWorkspace.screensDidWakeNotifica
 }
 
 let dc = DistributedNotificationCenter.default()
+let restartOnLock = CommandLine.arguments.contains("--restart-on-lock")
 dc.addObserver(forName: Notification.Name("com.apple.screenIsLocked"), object: nil, queue: .main) {
-  restartWallpaperAgent(after: $0.name.rawValue)
+  if restartOnLock { restartWallpaperAgent(after: $0.name.rawValue) } else { log($0.name.rawValue) }
 }
 dc.addObserver(forName: Notification.Name("com.apple.screenIsUnlocked"), object: nil, queue: .main) {
   log($0.name.rawValue)
 }
 
-log("ready")
+log("ready (restart on lock: \(restartOnLock))")
 RunLoop.main.run()

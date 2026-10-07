@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<!-- Template: install-wake-helper.sh substitutes __BIN__ and __LOG__. -->
+<!-- Template: install-wake-helper.sh substitutes __BIN__, __EXTRA_ARGS__ and __LOG__. -->
 <plist version="1.0">
 <dict>
   <key>Label</key>
   <string>com.aerial-manager.wakewatcher</string>
   <key>ProgramArguments</key>
   <array>
-    <string>__BIN__</string>
+    <string>__BIN__</string><!--__EXTRA_ARGS__-->
   </array>
   <key>StandardOutPath</key>
   <string>__LOG__</string>
