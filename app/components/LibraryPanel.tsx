@@ -135,7 +135,12 @@ export default function LibraryPanel({ videos, slots, busy, onChanged, onError, 
           const id = `${v.dir}/${v.name}`;
           const menuOpen = menuFor === id;
           return (
-            <li key={id} className="glass lift group rounded-[18px] p-2.5">
+            <li
+              key={id}
+              // each glass card is its own stacking context; lift the one with an open menu
+              // above its siblings so the next card's video can't paint over the dropdown
+              className={`glass lift group rounded-[18px] p-2.5${menuOpen ? " relative z-30" : ""}`}
+            >
               <div className="relative mb-2.5">
                 <HoverVideo
                   key={v.mtime}
@@ -180,7 +185,7 @@ export default function LibraryPanel({ videos, slots, busy, onChanged, onError, 
                         onClick={() => setMenuFor(null)}
                         className="fixed inset-0 z-10 cursor-default"
                       />
-                      <div className="glass-raised absolute z-20 mt-1.5 max-h-56 w-64 overflow-auto rounded-[14px] p-1.5">
+                      <div className="glass-raised glass-menu absolute z-20 mt-1.5 max-h-56 w-64 overflow-auto rounded-[14px] p-1.5">
                         {orderedSlots.map((s) => (
                           <button
                             key={s.uuid}
@@ -193,7 +198,7 @@ export default function LibraryPanel({ videos, slots, busy, onChanged, onError, 
                             {s.isSelected ? (
                               <>
                                 <span className="live-dot" />
-                                <span className="text-[var(--live)]">Lock screen</span>
+                                <span className="whitespace-nowrap text-[var(--live)]">Lock screen</span>
                               </>
                             ) : (
                               <span className="font-mono text-[var(--text-faint)]">{s.uuid.slice(0, 8)}</span>

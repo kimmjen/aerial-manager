@@ -89,6 +89,12 @@ body::after {
     box-shadow: var(--highlight), var(--shadow-lg);
   }
 
+  /* Dropdowns sit over busy video cards and can't blur what's outside their own
+     card (nested backdrop-filter), so they need an opaque fill to stay legible. */
+  .glass-menu {
+    background: var(--bg);
+  }
+
   /* Hover lift for interactive cards */
   .lift {
     transition:
