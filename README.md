@@ -23,7 +23,6 @@ Aerial Manager swaps those files with videos of your choice (remuxed with ffmpeg
 ## Requirements
 
 - **macOS 26 (Tahoe)** — earlier versions store aerials in a root-owned location (`com.apple.idleassetsd`) and are not supported
-- **macOS 27 is untested.** One user on 27.0.1 reports the video plays on the first lock, then the desktop turns grey and the lock screen black after further lock/unlock cycles. Until this is understood, use it on 27 at your own risk.
 - **At least one aerial wallpaper downloaded** — System Settings → Wallpaper → pick any aerial. Each downloaded aerial becomes a replaceable slot.
 - **ffmpeg** — `brew install ffmpeg`
 - **Node.js 20+**
@@ -59,9 +58,11 @@ The app maintains a `data/slots.json` mapping of which of your videos is inside 
 ## Caveats
 
 - Thumbnails in System Settings still show Apple's original previews; the played video is yours.
+- The lock screen and desktop share one aerial: macOS animates it on the lock screen and shows a paused frame on the desktop. macOS has no option for a video lock screen with a separate still desktop picture, so this tool can't do that either.
+- Always apply videos through the app so they are converted to the format the lock screen expects (HEVC `.mov`). A video in another format can leave a grey desktop or a black lock screen.
 - macOS updates or wallpaper re-downloads may overwrite replaced slots — just re-apply.
 - Videos are converted to **HEVC** when applied to a slot — the macOS Tahoe lock-screen renderer only plays HEVC reliably (an H.264 slot shows a black/frozen screen). Slot previews in the web UI therefore need Safari; the library keeps H.264 sources for broad browser preview.
-- The lock-screen aerial sometimes fails to resume after the Mac sleeps — a macOS issue that affects Apple's own aerials too (re-locking with Ctrl+Cmd+Q brings it back). Optional fix: auto-restart the wallpaper agent on system/display wake with `sh scripts/install-wake-helper.sh` (needs the Xcode command line tools; log at `~/.aerial-manager/wake.log`). If your Mac rarely sleeps, add `--restart-on-lock` to also restart whenever the screen locks — macOS 26 only, untested on 27.
+- The lock-screen aerial sometimes fails to resume after the Mac sleeps — a macOS issue that affects Apple's own aerials too (re-locking with Ctrl+Cmd+Q brings it back). Optional fix: auto-restart the wallpaper agent on system/display wake and screen lock with `sh scripts/install-wake-helper.sh` (needs the Xcode command line tools; log at `~/.aerial-manager/wake.log`). It also restarts whenever the screen locks, which matters on Macs that rarely sleep; pass `--no-restart-on-lock` to turn that off.
 - Everything happens in user-space (`~/Library`); no sudo, no SIP changes.
 
 Use at your own risk — this modifies files inside `~/Library/Application Support/com.apple.wallpaper`. Originals are always backed up to `BACKUP_DIR` before the first overwrite.
