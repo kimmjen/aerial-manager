@@ -63,6 +63,7 @@ fn strings(args: &[&str]) -> Vec<String> {
 }
 
 /// H.264 re-encode for the in-place library reformat (browser-previewable).
+#[allow(dead_code)] // used by background conversion jobs (migration step 4)
 pub fn reencode_args(src: &str, out: &str, meta: Option<&VideoMeta>) -> Vec<String> {
     let mut a = strings(&["-y", "-loglevel", "error", "-i", src, "-an"]);
     a.extend(video_filter_args(meta));

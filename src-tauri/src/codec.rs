@@ -29,6 +29,19 @@ pub fn parse_ffprobe_json(json: &str) -> VideoMeta {
     }
 }
 
+/// Codec + dimensions + framerate of the first video stream (unknown on any failure).
+pub fn probe_meta(ffprobe: &str, file: &std::path::Path) -> VideoMeta {
+    std::process::Command::new(ffprobe)
+        .args(["-v", "error", "-select_streams", "v:0", "-show_entries", "stream=codec_name,width,height,avg_frame_rate", "-of", "json"])
+        .arg(file)
+        .output()
+        .ok()
+        .filter(|o| o.status.success())
+        .map(|o| parse_ffprobe_json(&String::from_utf8_lossy(&o.stdout)))
+        .unwrap_or_default()
+}
+
+
 #[cfg(test)]
 mod tests {
     use super::*;
