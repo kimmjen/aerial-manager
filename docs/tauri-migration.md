@@ -77,8 +77,10 @@ src-tauri/
    - 확인: `npm run tauri dev`로 기존과 같은 UI가 뜬다.
 2. **Rust 코어(순수 함수)**: config, paths, mapping, transcode, codec 파싱. 기존 vitest 테스트(`config`, `mapping`, `transcode`, `status`, `library`)를 Rust 단위 테스트로 옮긴다. `stream`은 asset 프로토콜로 대체되므로 삭제한다.
    - 확인: `cargo test`, 기존 테스트 케이스와 1:1 대응.
-3. **커맨드 + 프런트 연결**: slots, wallpaper, library 커맨드. fetch를 invoke로, 미리보기를 asset 프로토콜로 바꾼다. slots.json 이전도 여기서 한다.
-   - 확인: 실제 슬롯에 적용, 복원, 선택해서 기존 웹과 결과 파일이 같은지(ffprobe) 비교한다.
+3. **커맨드 + 프런트 연결**: 두 PR로 나눈다.
+   - 3a: Rust 커맨드(slots, wallpaper, library)와 설정 로드(`config.json`). 확인: 같은 데이터에서 `get_slots`/`list_library` 결과가 Next API와 같고, 임시 폴더에서 적용·선택·복원이 기존과 같은 파일을 만든다.
+   - 3b: 프런트 어댑터(Tauri면 invoke, 아니면 fetch — Next는 6번까지 계속 동작), 미리보기를 asset 프로토콜로, 라이브러리 정렬은 사용자 로케일(`Intl.Collator`). 확인: 실제 슬롯에 적용·복원·선택.
+   - `data/slots.json` 이전: 앱은 예전 저장소 위치를 알 수 없으므로 4번 설정 화면의 '이전 버전에서 가져오기'로 옮긴다.
 4. **가져오기, 백그라운드 변환, 설정 화면**: dialog와 drag-drop으로 가져오기, jobs, 이벤트 알림. 라이브러리 폴더와 백업 폴더를 고르는 설정 화면.
    - 확인: AV1 파일을 가져오면 변환 상태가 표시되고 끝나면 ready가 된다. 설정에서 폴더를 추가하면 라이브러리에 바로 반영된다.
 5. **네이티브**: watcher, 트레이, autostart, 기존 launchd helper 정리.
