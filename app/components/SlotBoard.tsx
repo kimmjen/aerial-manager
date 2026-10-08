@@ -2,13 +2,14 @@
 
 import { useRef, useState } from "react";
 import type { SlotInfo } from "@/lib/slots";
+import { api } from "../api";
 import HoverVideo from "./HoverVideo";
 import { formatSize } from "./format";
 
 interface Props {
   slots: SlotInfo[];
   busy: boolean;
-  onAction: (run: () => Promise<Response>) => void;
+  onAction: (run: () => Promise<unknown>) => void;
   onReplaceSlot: (uuid: string, file: File) => void;
 }
 
@@ -23,23 +24,11 @@ export default function SlotBoard({ slots, busy, onAction, onReplaceSlot }: Prop
 
   function restore(uuid: string) {
     if (!confirm("Restore this slot to the original Apple aerial?")) return;
-    onAction(() =>
-      fetch("/api/slots/restore", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ uuid }),
-      }),
-    );
+    onAction(() => api.restore(uuid));
   }
 
   function select(uuid: string) {
-    onAction(() =>
-      fetch("/api/slots/select", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ uuid }),
-      }),
-    );
+    onAction(() => api.select(uuid));
   }
 
   return (
@@ -66,7 +55,7 @@ export default function SlotBoard({ slots, busy, onAction, onReplaceSlot }: Prop
             <HoverVideo
               // size + appliedAt as cache buster so the preview reloads after apply/restore
               key={`${s.size}-${s.source?.appliedAt ?? "original"}`}
-              src={`/api/slots/stream?uuid=${s.uuid}&v=${s.size}`}
+              src={api.slotVideoUrl(s.uuid, s.size)}
               className="mb-2.5 aspect-video w-full rounded-[14px] bg-black object-cover"
             />
             <div className="mb-1 flex items-center gap-2 px-0.5">

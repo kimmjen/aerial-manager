@@ -22,6 +22,19 @@ async fn blocking<T: Send + 'static>(f: impl FnOnce() -> T + Send + 'static) -> 
     tauri::async_runtime::spawn_blocking(f).await.map_err(|e| e.to_string())
 }
 
+/// Absolute folders the UI needs to build asset:// preview URLs.
+#[derive(serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+struct Locations {
+    library_dirs: std::collections::BTreeMap<String, String>,
+    aerials_dir: PathBuf,
+}
+
+#[tauri::command]
+fn get_locations(paths: State<'_, Paths>) -> Locations {
+    Locations { library_dirs: paths.library_dirs.clone(), aerials_dir: paths.aerials_dir.clone() }
+}
+
 #[tauri::command]
 async fn get_slots(paths: State<'_, Paths>) -> Result<Vec<SlotInfo>, String> {
     let p = paths.inner().clone();
@@ -80,11 +93,19 @@ fn main() {
         .setup(|app| {
             let home = PathBuf::from(std::env::var("HOME")?);
             let app_data = app.path().app_data_dir()?;
-            app.manage(Paths::load(&home, &app_data));
+            let paths = Paths::load(&home, &app_data);
+            // previews may read only the library folders and the aerial slots
+            let scope = app.asset_protocol_scope();
+            for dir in paths.library_dirs.values() {
+                scope.allow_directory(dir, false)?;
+            }
+            scope.allow_directory(&paths.aerials_dir, false)?;
+            app.manage(paths);
             app.manage(Arc::new(MetaCache::default()));
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
+            get_locations,
             get_slots,
             apply_to_slot,
             reapply_all,

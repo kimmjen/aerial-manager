@@ -1,13 +1,14 @@
 "use client";
 
 import type { SlotInfo } from "@/lib/slots";
+import { api } from "../api";
 import HoverVideo from "./HoverVideo";
 import { formatSize } from "./format";
 
 interface Props {
   slot: SlotInfo | null;
   busy: boolean;
-  onAction: (run: () => Promise<Response>) => void;
+  onAction: (run: () => Promise<unknown>) => void;
 }
 
 /** Large featured preview of the slot currently shown on the lock screen. */
@@ -23,13 +24,7 @@ export default function LiveHero({ slot, busy, onAction }: Props) {
 
   function restore() {
     if (!slot || !confirm("Restore this slot to the original Apple aerial?")) return;
-    onAction(() =>
-      fetch("/api/slots/restore", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ uuid: slot.uuid }),
-      }),
-    );
+    onAction(() => api.restore(slot.uuid));
   }
 
   return (
@@ -43,7 +38,7 @@ export default function LiveHero({ slot, busy, onAction }: Props) {
       <div className="relative grid gap-5 md:grid-cols-[1.45fr_1fr]">
         <HoverVideo
           key={`${slot.size}-${slot.source?.appliedAt ?? "original"}`}
-          src={`/api/slots/stream?uuid=${slot.uuid}&v=${slot.size}`}
+          src={api.slotVideoUrl(slot.uuid, slot.size)}
           className="aspect-video w-full rounded-[20px] bg-black object-cover"
         />
         <div className="flex min-w-0 flex-col justify-center gap-3 px-3 pb-4 md:py-5 md:pr-6">

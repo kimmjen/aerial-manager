@@ -7,5 +7,5 @@ export default defineConfig({
   plugins: [react()],
   resolve: { alias: { "@": path.resolve(__dirname) } },
   clearScreen: false,
-  server: { port: 1420, strictPort: true },
+  server: { port: 1430, strictPort: true },
 });
