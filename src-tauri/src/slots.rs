@@ -6,7 +6,7 @@ use std::path::{Path, PathBuf};
 use std::process::Command;
 
 use crate::codec::probe_meta;
-use crate::mapping::{read_mapping, write_mapping, SlotSource};
+use crate::mapping::{read_mapping, write_mapping, SlotMapping, SlotSource};
 use crate::paths::{is_safe_video_name, is_slot_uuid};
 use crate::settings::Paths;
 use crate::transcode::ffmpeg_args;
@@ -164,9 +164,50 @@ pub fn restore_slot(p: &Paths, uuid: &str) -> Result<(), String> {
     Ok(())
 }
 
+/// Merge a slots.json from the web app (`data/slots.json`) into this app's mapping.
+/// Existing entries win; only valid slot ids are taken. Returns how many were added.
+pub fn import_legacy_slots(p: &Paths, file: &Path) -> Result<usize, String> {
+    let text = fs::read_to_string(file).map_err(|e| e.to_string())?;
+    let legacy: SlotMapping = serde_json::from_str(&text).map_err(|_| "not a slots.json from Aerial Manager".to_string())?;
+    let mut mapping = read_mapping(&p.slots_file);
+    let mut added = 0;
+    for (uuid, src) in legacy {
+        if is_slot_uuid(&uuid) && !mapping.contains_key(&uuid) {
+            mapping.insert(uuid, src);
+            added += 1;
+        }
+    }
+    write_mapping(&mapping, &p.slots_file).map_err(|e| e.to_string())?;
+    Ok(added)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn imports_legacy_mapping_without_overwriting() {
+        let root = std::env::temp_dir().join(format!("aerial-legacy-{}", std::process::id()));
+        let _ = fs::remove_dir_all(&root);
+        fs::create_dir_all(&root).unwrap();
+        let mut p = Paths::load(&root, &root);
+        p.slots_file = root.join("slots.json");
+        fs::write(&p.slots_file, r#"{"00BA71CD-2C54-415A-A68A-8358E677D750":{"dir":"a","name":"mine.mp4","appliedAt":"x"}}"#).unwrap();
+        let legacy = root.join("legacy.json");
+        fs::write(&legacy, r#"{
+            "00BA71CD-2C54-415A-A68A-8358E677D750":{"dir":"b","name":"old.mp4","appliedAt":"y"},
+            "FE876489-CBD5-479B-A8F0-1B67F0741CEA":{"dir":"b","name":"new.mp4","appliedAt":"z"},
+            "../evil":{"dir":"b","name":"x.mp4","appliedAt":"z"}
+        }"#).unwrap();
+        assert_eq!(import_legacy_slots(&p, &legacy).unwrap(), 1);
+        let m = read_mapping(&p.slots_file);
+        assert_eq!(m["00BA71CD-2C54-415A-A68A-8358E677D750"].name, "mine.mp4");
+        assert_eq!(m["FE876489-CBD5-479B-A8F0-1B67F0741CEA"].name, "new.mp4");
+        assert_eq!(m.len(), 2);
+
+        fs::write(&legacy, "not json").unwrap();
+        assert!(import_legacy_slots(&p, &legacy).is_err());
+    }
 
     #[test]
     fn lists_only_uuid_movs_uppercased_and_sorted() {
