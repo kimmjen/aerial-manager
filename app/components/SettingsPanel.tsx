@@ -15,6 +15,8 @@ export default function SettingsPanel({ firstRun, onClose, onSaved }: Props) {
   const [saved, setSaved] = useState<AppConfig>({ libraryDirs: [] });
   const [libraryDirs, setLibraryDirs] = useState<string[]>([]);
   const [backupDir, setBackupDir] = useState("");
+  const [restartOnLock, setRestartOnLock] = useState(true);
+  const [legacyHelper, setLegacyHelper] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -24,6 +26,8 @@ export default function SettingsPanel({ firstRun, onClose, onSaved }: Props) {
       setSaved(s.config);
       setLibraryDirs(s.config.libraryDirs.length ? s.config.libraryDirs : s.libraryDirs);
       setBackupDir(s.config.backupDir ?? s.backupDir);
+      setRestartOnLock(s.restartOnLock);
+      setLegacyHelper(s.legacyHelperInstalled);
     }, (e) => setError(String(e)));
   }, []);
 
@@ -50,11 +54,21 @@ export default function SettingsPanel({ firstRun, onClose, onSaved }: Props) {
     }
   }
 
+  async function removeLegacyHelper() {
+    setError(null);
+    try {
+      await api.removeLegacyHelper();
+      setLegacyHelper(false);
+    } catch (e) {
+      setError(String(e));
+    }
+  }
+
   async function save() {
     setSaving(true);
     setError(null);
     try {
-      await api.saveSettings({ ...saved, libraryDirs, backupDir });
+      await api.saveSettings({ ...saved, libraryDirs, backupDir, restartOnLock });
       onSaved();
       onClose();
     } catch (e) {
@@ -107,6 +121,36 @@ export default function SettingsPanel({ firstRun, onClose, onSaved }: Props) {
             </button>
           </div>
         </section>
+
+        <section className="mt-5">
+          <h3 className="section-title mb-2">Lock screen</h3>
+          <label className="flex items-start gap-2.5 text-sm text-[var(--text)]">
+            <input
+              type="checkbox"
+              checked={restartOnLock}
+              onChange={(e) => setRestartOnLock(e.target.checked)}
+              className="mt-0.5 accent-[var(--accent)]"
+            />
+            <span>
+              Refresh the wallpaper every time the screen locks
+              <span className="block text-xs text-[var(--text-dim)]">
+                Fixes a black or frozen lock screen on Macs that rarely sleep. It always refreshes after waking.
+              </span>
+            </span>
+          </label>
+        </section>
+
+        {legacyHelper && (
+          <section className="glass mt-5 rounded-[12px] p-3">
+            <p className="text-xs text-[var(--text-dim)]">
+              The old wake helper from the web app is still installed. This app does the same job now, so remove it
+              to avoid refreshing twice.
+            </p>
+            <button onClick={removeLegacyHelper} className="btn btn-ghost btn-danger mt-2 px-3 py-1.5 text-xs">
+              Remove old helper
+            </button>
+          </section>
+        )}
 
         <section className="mt-5">
           <h3 className="section-title mb-2">Coming from the web app?</h3>

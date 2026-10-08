@@ -32,12 +32,15 @@ export interface AppConfig {
   libraryDirs: string[];
   backupDir?: string | null;
   ffmpegPath?: string | null;
+  restartOnLock?: boolean | null;
 }
 export interface SettingsView {
   config: AppConfig;
   configured: boolean;
   libraryDirs: string[];
   backupDir: string;
+  restartOnLock: boolean;
+  legacyHelperInstalled: boolean;
 }
 
 /** Viewer-locale order (the server-side sort is only a fallback). */
@@ -93,6 +96,8 @@ export const api = {
     await invoke("save_settings", { config });
     locations = null; // folders may have changed
   },
+
+  removeLegacyHelper: () => invoke<void>("remove_legacy_helper"),
 
   /** Merge the web app's data/slots.json; returns how many slot records were added. */
   importLegacySlots: (file: string) => invoke<number>("import_legacy_slots", { file }),

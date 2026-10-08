@@ -14,6 +14,10 @@ pub struct AppConfig {
     pub backup_dir: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub ffmpeg_path: Option<String>,
+    /// Restart WallpaperAgent on every screen lock, not just on wake (default on:
+    /// Macs that rarely sleep only ever see the lock).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub restart_on_lock: Option<bool>,
 }
 
 /// Resolved locations used by every command.
@@ -26,6 +30,7 @@ pub struct Paths {
     pub slots_file: PathBuf,
     pub ffmpeg: String,
     pub ffprobe: String,
+    pub restart_on_lock: bool,
 }
 
 /// The saved config, or None before the first save (first run).
@@ -56,6 +61,26 @@ pub fn save_config(home: &Path, app_data: &Path, current: &Paths, cfg: &AppConfi
     Ok(next)
 }
 
+const LEGACY_HELPER: &str = "com.aerial-manager.wakewatcher";
+
+/// The launchd wake helper from the web-app era; running it alongside the app restarts twice.
+pub fn legacy_helper_plist(home: &Path) -> PathBuf {
+    home.join(format!("Library/LaunchAgents/{LEGACY_HELPER}.plist"))
+}
+
+/// Unload and delete the legacy helper (its log in ~/.aerial-manager is kept).
+pub fn remove_legacy_helper(home: &Path) -> Result<(), String> {
+    let uid = std::process::Command::new("/usr/bin/id").arg("-u").output().map_err(|e| e.to_string())?;
+    let target = format!("gui/{}/{LEGACY_HELPER}", String::from_utf8_lossy(&uid.stdout).trim());
+    let _ = std::process::Command::new("/bin/launchctl").args(["bootout", &target]).output();
+    for f in [legacy_helper_plist(home), home.join(".aerial-manager/wake-watcher")] {
+        if f.exists() {
+            std::fs::remove_file(&f).map_err(|e| format!("{}: {e}", f.display()))?;
+        }
+    }
+    Ok(())
+}
+
 fn has_backups(dir: &Path) -> bool {
     std::fs::read_dir(dir)
         .into_iter()
@@ -80,6 +105,7 @@ impl Paths {
             slots_file: app_data.join("slots.json"),
             ffprobe: ffmpeg.strip_suffix("ffmpeg").map(|p| format!("{p}ffprobe")).unwrap_or_else(|| "ffprobe".into()),
             ffmpeg,
+            restart_on_lock: cfg.restart_on_lock.unwrap_or(true),
         }
     }
 }
@@ -108,6 +134,7 @@ mod tests {
         assert_eq!(p.aerials_dir, PathBuf::from("/Users/x/Library/Application Support/com.apple.wallpaper/aerials/videos"));
         assert_eq!(p.slots_file, PathBuf::from("/nonexistent/slots.json"));
         assert!(p.ffprobe.ends_with("ffprobe"));
+        assert!(p.restart_on_lock, "on by default");
     }
 
     #[test]
