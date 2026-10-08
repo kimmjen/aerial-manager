@@ -1,10 +1,12 @@
 // One client for both runtimes: Tauri commands inside the desktop app, the Next API
 // routes in the browser. The Next half goes away with the web app (migration step 6).
 import { convertFileSrc, invoke } from "@tauri-apps/api/core";
+import { getCurrentWebview } from "@tauri-apps/api/webview";
+import { open } from "@tauri-apps/plugin-dialog";
 import type { LibraryVideo } from "@/lib/library";
 import type { ReapplyResult, SlotInfo } from "@/lib/slots";
 
-const isTauri = typeof window !== "undefined" && "__TAURI_INTERNALS__" in window;
+export const isTauri = typeof window !== "undefined" && "__TAURI_INTERNALS__" in window;
 
 async function http<T>(path: string, method = "GET", body?: unknown): Promise<T> {
   const res = await fetch(path, {
@@ -58,12 +60,30 @@ export const api = {
   remove: (dir: string, name: string) =>
     isTauri ? invoke<void>("delete_library_file", { dir, name }) : http<void>("/api/library/file", "DELETE", { dir, name }),
 
-  /** Raw upload response (callers decide whether 409 "already exists" is fatal). */
-  upload: (form: FormData): Promise<Response> =>
-    isTauri
-      ? // ponytail: importing files in the desktop app lands in migration step 4
-        Promise.reject(new Error("Adding videos from the desktop app isn't available yet — use the web app for now."))
-      : fetch("/api/library/upload", { method: "POST", body: form }),
+  /** Web: raw upload response (callers decide whether 409 "already exists" is fatal). */
+  upload: (form: FormData): Promise<Response> => fetch("/api/library/upload", { method: "POST", body: form }),
+
+  /** Desktop: copy files into the first library folder; `allowExisting` reuses a same-named file. */
+  importPaths: (files: string[], allowExisting: boolean) =>
+    invoke<{ dir: string; saved: string[] }>("import_files", { files, allowExisting }),
+
+  /** Desktop: native file picker for videos; null when cancelled. */
+  pickVideoPaths: async (multiple: boolean): Promise<string[] | null> => {
+    const picked = await open({ multiple, filters: [{ name: "Videos", extensions: ["mp4", "mov", "m4v"] }] });
+    if (picked === null) return null;
+    return Array.isArray(picked) ? picked : [picked];
+  },
+
+  /** Desktop: the window swallows file drops, so drag state and dropped paths come from Tauri. */
+  onFileDrop: (onHover: (over: boolean) => void, onDrop: (paths: string[]) => void) =>
+    getCurrentWebview().onDragDropEvent(({ payload }) => {
+      if (payload.type === "drop") {
+        onHover(false);
+        onDrop(payload.paths);
+      } else {
+        onHover(payload.type !== "leave");
+      }
+    }),
 
   libraryVideoUrl: (dir: string, name: string, version?: number) => {
     const v = version ? `v=${Math.round(version)}` : "";

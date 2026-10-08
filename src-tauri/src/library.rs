@@ -7,10 +7,12 @@ use std::sync::Mutex;
 use std::time::UNIX_EPOCH;
 
 use crate::codec::{probe_meta, VideoMeta};
+use crate::jobs::Jobs;
 use crate::paths::is_safe_video_name;
 use crate::settings::Paths;
 use crate::slots::resolve_library_file;
 use crate::status::{derive_library_status, LibraryStatus};
+use crate::transcode::is_mov_compatible;
 
 #[derive(Debug, Serialize)]
 pub struct LibraryVideo {
@@ -42,7 +44,7 @@ impl MetaCache {
     }
 }
 
-pub fn list_library(p: &Paths, cache: &MetaCache) -> Vec<LibraryVideo> {
+pub fn list_library(p: &Paths, cache: &MetaCache, jobs: &Jobs) -> Vec<LibraryVideo> {
     let mut out = Vec::new();
     for (dir, base) in &p.library_dirs {
         let Ok(entries) = fs::read_dir(base) else { continue };
@@ -62,7 +64,7 @@ pub fn list_library(p: &Paths, cache: &MetaCache) -> Vec<LibraryVideo> {
                 name,
                 size: md.len(),
                 mtime: mtime_ns as f64 / 1e6,
-                status: derive_library_status(meta.codec.as_deref(), None),
+                status: derive_library_status(meta.codec.as_deref(), jobs.get(&entry.path())),
                 codec: meta.codec,
                 width: meta.width,
                 height: meta.height,
@@ -73,6 +75,40 @@ pub fn list_library(p: &Paths, cache: &MetaCache) -> Vec<LibraryVideo> {
     // Case-insensitive codepoint order; the UI re-sorts with the viewer's locale (Intl.Collator).
     out.sort_by_cached_key(|v| v.name.to_lowercase());
     out
+}
+
+#[derive(Debug, Serialize)]
+pub struct ImportResult {
+    pub dir: String,
+    pub saved: Vec<String>,
+}
+
+/// Copy files into the first library folder (replaces the web upload). With
+/// `allow_existing`, a same-named file already there is reused instead of failing.
+/// Incompatible codecs are queued for background conversion.
+pub fn import_files(p: &Paths, jobs: &Jobs, files: &[PathBuf], allow_existing: bool) -> Result<ImportResult, String> {
+    let (dir, base) = p.library_dirs.iter().next().ok_or("no library folder configured")?;
+    fs::create_dir_all(base).map_err(|e| e.to_string())?;
+    let mut saved = Vec::new();
+    for src in files {
+        let name = src.file_name().and_then(|n| n.to_str()).unwrap_or_default().to_string();
+        if !is_safe_video_name(&name) {
+            return Err(format!("unsupported file: {name}"));
+        }
+        let dest = Path::new(base).join(&name);
+        if dest.exists() {
+            if !allow_existing {
+                return Err(format!("already exists: {name}"));
+            }
+        } else {
+            fs::copy(src, &dest).map_err(|e| format!("copy failed for {name}: {e}"))?;
+            if !is_mov_compatible(probe_meta(&p.ffprobe, &dest).codec.as_deref()) {
+                jobs.convert_in_background(p.ffmpeg.clone(), dest);
+            }
+        }
+        saved.push(name);
+    }
+    Ok(ImportResult { dir: dir.clone(), saved })
 }
 
 pub fn rename_library_file(p: &Paths, dir: &str, name: &str, new_name: &str) -> Result<(), String> {
@@ -106,14 +142,25 @@ mod tests {
         p.ffprobe = "/nonexistent/ffprobe".into(); // probing fails → unknown meta
 
         let cache = MetaCache::default();
-        let names: Vec<_> = list_library(&p, &cache).into_iter().map(|v| (v.name, v.size)).collect();
+        let jobs = Jobs::default();
+        let names: Vec<_> = list_library(&p, &cache, &jobs).into_iter().map(|v| (v.name, v.size)).collect();
         assert_eq!(names, vec![("a.mov".to_string(), 2), ("b.mp4".to_string(), 1)]);
 
         rename_library_file(&p, "Movies", "a.mov", "c.mov").unwrap();
         assert!(rename_library_file(&p, "Movies", "b.mp4", "c.mov").is_err(), "refuses to overwrite");
         delete_library_file(&p, "Movies", "b.mp4").unwrap();
-        let names: Vec<_> = list_library(&p, &cache).into_iter().map(|v| v.name).collect();
+        let names: Vec<_> = list_library(&p, &cache, &jobs).into_iter().map(|v| v.name).collect();
         assert_eq!(names, vec!["c.mov"]);
-        assert_eq!(list_library(&p, &cache)[0].status, LibraryStatus::Incompatible);
+        assert_eq!(list_library(&p, &cache, &jobs)[0].status, LibraryStatus::Incompatible);
+
+        // import: copies into the first library dir, refuses or reuses duplicates
+        let outside = home.join("in.mp4");
+        fs::write(&outside, b"z").unwrap();
+        let r = import_files(&p, &jobs, std::slice::from_ref(&outside), false).unwrap();
+        assert_eq!((r.dir.as_str(), r.saved.clone()), ("Movies", vec!["in.mp4".to_string()]));
+        assert!(movies.join("in.mp4").exists());
+        assert!(import_files(&p, &jobs, std::slice::from_ref(&outside), false).is_err());
+        assert_eq!(import_files(&p, &jobs, &[outside], true).unwrap().saved, vec!["in.mp4"]);
+        assert!(import_files(&p, &jobs, &[home.join("notes.txt")], true).is_err());
     }
 }

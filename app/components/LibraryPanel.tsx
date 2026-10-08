@@ -1,11 +1,11 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { LibraryVideo } from "@/lib/library";
 import type { LibraryDirKey } from "@/lib/config";
 import type { SlotInfo } from "@/lib/slots";
 import HoverVideo from "./HoverVideo";
-import { api } from "../api";
+import { api, isTauri } from "../api";
 import { formatSize, formatVideoSpec } from "./format";
 
 interface Props {
@@ -37,15 +37,20 @@ export default function LibraryPanel({ videos, slots, busy, onChanged, onError, 
   // live slot first so it's the top choice in every menu
   const orderedSlots = [...slots].sort((a, b) => Number(b.isSelected) - Number(a.isSelected));
 
-  async function upload(files: FileList | null) {
+  /** Upload files (web) or copy picked/dropped paths (desktop) into the library. */
+  async function upload(files: FileList | string[] | null) {
     if (!files || files.length === 0) return;
     setUploading(true);
     try {
-      const form = new FormData();
-      for (const f of Array.from(files)) form.append("files", f);
-      const res = await api.upload(form);
-      const body = await res.json();
-      if (!res.ok) throw new Error(body.error);
+      if (Array.isArray(files)) {
+        await api.importPaths(files, false);
+      } else {
+        const form = new FormData();
+        for (const f of Array.from(files)) form.append("files", f);
+        const res = await api.upload(form);
+        const body = await res.json();
+        if (!res.ok) throw new Error(body.error);
+      }
       onChanged();
     } catch (e) {
       onError(String(e));
@@ -75,6 +80,19 @@ export default function LibraryPanel({ videos, slots, busy, onChanged, onError, 
       onError(String(e));
     }
   }
+
+  // desktop: Tauri intercepts file drops before the DOM sees them
+  const uploadRef = useRef(upload);
+  useEffect(() => {
+    uploadRef.current = upload;
+  });
+  useEffect(() => {
+    if (!isTauri) return;
+    const unlisten = api.onFileDrop(setDragging, (paths) => uploadRef.current(paths));
+    return () => {
+      unlisten.then((f) => f());
+    };
+  }, []);
 
   return (
     <section
@@ -110,7 +128,9 @@ export default function LibraryPanel({ videos, slots, busy, onChanged, onError, 
             </div>
           )}
           <button
-            onClick={() => fileInput.current?.click()}
+            onClick={() =>
+              isTauri ? api.pickVideoPaths(true).then((p) => p && upload(p)) : fileInput.current?.click()
+            }
             disabled={uploading}
             className="btn btn-glass px-4 py-2 text-xs"
           >

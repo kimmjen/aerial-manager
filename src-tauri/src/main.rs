@@ -1,5 +1,6 @@
 mod codec;
 mod config;
+mod jobs;
 mod library;
 mod mapping;
 mod paths;
@@ -13,7 +14,8 @@ use std::path::PathBuf;
 use std::sync::Arc;
 use tauri::{Manager, State};
 
-use library::{LibraryVideo, MetaCache};
+use jobs::Jobs;
+use library::{ImportResult, LibraryVideo, MetaCache};
 use settings::Paths;
 use slots::{ReapplyResult, SlotInfo};
 
@@ -71,9 +73,24 @@ async fn set_selected_slot(paths: State<'_, Paths>, uuid: String) -> Result<(), 
 }
 
 #[tauri::command]
-async fn list_library(paths: State<'_, Paths>, cache: State<'_, Arc<MetaCache>>) -> Result<Vec<LibraryVideo>, String> {
-    let (p, cache) = (paths.inner().clone(), cache.inner().clone());
-    blocking(move || library::list_library(&p, &cache)).await
+async fn list_library(
+    paths: State<'_, Paths>,
+    cache: State<'_, Arc<MetaCache>>,
+    jobs: State<'_, Jobs>,
+) -> Result<Vec<LibraryVideo>, String> {
+    let (p, cache, jobs) = (paths.inner().clone(), cache.inner().clone(), jobs.inner().clone());
+    blocking(move || library::list_library(&p, &cache, &jobs)).await
+}
+
+#[tauri::command]
+async fn import_files(
+    paths: State<'_, Paths>,
+    jobs: State<'_, Jobs>,
+    files: Vec<PathBuf>,
+    allow_existing: bool,
+) -> Result<ImportResult, String> {
+    let (p, jobs) = (paths.inner().clone(), jobs.inner().clone());
+    blocking(move || library::import_files(&p, &jobs, &files, allow_existing)).await?
 }
 
 #[tauri::command]
@@ -90,6 +107,7 @@ async fn delete_library_file(paths: State<'_, Paths>, dir: String, name: String)
 
 fn main() {
     tauri::Builder::default()
+        .plugin(tauri_plugin_dialog::init())
         .setup(|app| {
             let home = PathBuf::from(std::env::var("HOME")?);
             let app_data = app.path().app_data_dir()?;
@@ -102,6 +120,7 @@ fn main() {
             scope.allow_directory(&paths.aerials_dir, false)?;
             app.manage(paths);
             app.manage(Arc::new(MetaCache::default()));
+            app.manage(Jobs::default());
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
@@ -112,6 +131,7 @@ fn main() {
             restore_slot,
             set_selected_slot,
             list_library,
+            import_files,
             rename_library_file,
             delete_library_file,
         ])
