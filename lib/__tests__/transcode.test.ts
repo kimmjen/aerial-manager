@@ -79,7 +79,9 @@ describe("ffmpegArgs (slot output is HEVC)", () => {
     expect(args).toContain("hevc_videotoolbox");
     const fc = argAfter(args, "-filter_complex");
     expect(fc).toContain("overlay");
-    expect(fc).toContain("boxblur");
+    // avgblur, not boxblur: boxblur is GPL-only and missing from the bundled LGPL ffmpeg
+    expect(fc).toContain("avgblur");
+    expect(fc).not.toContain("boxblur");
     expect(argAfter(args, "-map")).toBe("[v]");
   });
 });
