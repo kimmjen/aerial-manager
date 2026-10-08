@@ -17,6 +17,8 @@ export default function SettingsPanel({ firstRun, onClose, onSaved }: Props) {
   const [backupDir, setBackupDir] = useState("");
   const [restartOnLock, setRestartOnLock] = useState(true);
   const [legacyHelper, setLegacyHelper] = useState(false);
+  // first run: on, so lock/wake keep being handled after a reboot
+  const [atLogin, setAtLogin] = useState(firstRun);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -29,7 +31,8 @@ export default function SettingsPanel({ firstRun, onClose, onSaved }: Props) {
       setRestartOnLock(s.restartOnLock);
       setLegacyHelper(s.legacyHelperInstalled);
     }, (e) => setError(String(e)));
-  }, []);
+    if (!firstRun) api.launchAtLogin().then(setAtLogin, (e) => setError(String(e)));
+  }, [firstRun]);
 
   async function addFolder() {
     const dir = await api.pickFolder();
@@ -69,6 +72,7 @@ export default function SettingsPanel({ firstRun, onClose, onSaved }: Props) {
     setError(null);
     try {
       await api.saveSettings({ ...saved, libraryDirs, backupDir, restartOnLock });
+      await api.setLaunchAtLogin(atLogin);
       onSaved();
       onClose();
     } catch (e) {
@@ -135,6 +139,21 @@ export default function SettingsPanel({ firstRun, onClose, onSaved }: Props) {
               Refresh the wallpaper every time the screen locks
               <span className="block text-xs text-[var(--text-dim)]">
                 Fixes a black or frozen lock screen on Macs that rarely sleep. It always refreshes after waking.
+              </span>
+            </span>
+          </label>
+          <label className="mt-3 flex items-start gap-2.5 text-sm text-[var(--text)]">
+            <input
+              type="checkbox"
+              checked={atLogin}
+              onChange={(e) => setAtLogin(e.target.checked)}
+              className="mt-0.5 accent-[var(--accent)]"
+            />
+            <span>
+              Open at login
+              <span className="block text-xs text-[var(--text-dim)]">
+                Starts in the menu bar so the lock screen keeps working after a restart. Closing the window keeps it
+                running there.
               </span>
             </span>
           </label>

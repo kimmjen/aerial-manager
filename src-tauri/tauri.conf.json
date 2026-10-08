@@ -11,7 +11,7 @@
   },
   "app": {
     "windows": [
-      { "title": "Aerial Manager", "width": 1280, "height": 860, "minWidth": 900, "minHeight": 600 }
+      { "label": "main", "title": "Aerial Manager", "visible": false, "width": 1280, "height": 860, "minWidth": 900, "minHeight": 600 }
     ],
     "security": { "csp": null, "assetProtocol": { "enable": true, "scope": [] } }
   },

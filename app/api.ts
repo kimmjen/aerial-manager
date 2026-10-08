@@ -2,6 +2,7 @@
 // routes in the browser. The Next half goes away with the web app (migration step 6).
 import { convertFileSrc, invoke } from "@tauri-apps/api/core";
 import { getCurrentWebview } from "@tauri-apps/api/webview";
+import { disable, enable, isEnabled } from "@tauri-apps/plugin-autostart";
 import { open } from "@tauri-apps/plugin-dialog";
 import type { LibraryVideo } from "@/lib/library";
 import type { ReapplyResult, SlotInfo } from "@/lib/slots";
@@ -96,6 +97,10 @@ export const api = {
     await invoke("save_settings", { config });
     locations = null; // folders may have changed
   },
+
+  /** Desktop: login item (launches hidden in the menu bar). */
+  launchAtLogin: () => isEnabled(),
+  setLaunchAtLogin: (on: boolean) => (on ? enable() : disable()),
 
   removeLegacyHelper: () => invoke<void>("remove_legacy_helper"),
 
