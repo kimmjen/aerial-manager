@@ -2,7 +2,7 @@
 
 import { useRef, useState } from "react";
 import type { SlotInfo } from "@/lib/slots";
-import { api } from "../api";
+import { api, isTauri } from "../api";
 import HoverVideo from "./HoverVideo";
 import { formatSize } from "./format";
 
@@ -10,7 +10,7 @@ interface Props {
   slots: SlotInfo[];
   busy: boolean;
   onAction: (run: () => Promise<unknown>) => void;
-  onReplaceSlot: (uuid: string, file: File) => void;
+  onReplaceSlot: (uuid: string, file: File | string) => void;
 }
 
 export default function SlotBoard({ slots, busy, onAction, onReplaceSlot }: Props) {
@@ -18,6 +18,10 @@ export default function SlotBoard({ slots, busy, onAction, onReplaceSlot }: Prop
   const [pickingFor, setPickingFor] = useState<string | null>(null);
 
   function pickFileFor(uuid: string) {
+    if (isTauri) {
+      api.pickVideoPaths(false).then((p) => p && onReplaceSlot(uuid, p[0]));
+      return;
+    }
     setPickingFor(uuid);
     fileInput.current?.click();
   }

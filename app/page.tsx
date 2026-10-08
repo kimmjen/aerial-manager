@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import type { LibraryDirKey } from "@/lib/config";
 import type { LibraryVideo } from "@/lib/library";
 import type { SlotInfo } from "@/lib/slots";
-import { api } from "./api";
+import { api, isTauri } from "./api";
 import LibraryPanel from "./components/LibraryPanel";
 import LiveHero from "./components/LiveHero";
 import SlotBoard from "./components/SlotBoard";
@@ -64,8 +64,12 @@ export default function Home() {
     }
   }
 
-  /** Upload a file into the default library dir — 409 (already exists) is non-fatal. */
-  async function uploadVideo(file: File): Promise<{ dir: LibraryDirKey; name: string }> {
+  /** Add a video to the default library dir (upload, or copy a picked path in the desktop app); an existing same-named file is reused. */
+  async function uploadVideo(file: File | string): Promise<{ dir: LibraryDirKey; name: string }> {
+    if (typeof file === "string") {
+      const r = await api.importPaths([file], true);
+      return { dir: r.dir, name: r.saved[0] };
+    }
     const form = new FormData();
     form.append("files", file);
     const res = await api.upload(form);
@@ -94,7 +98,7 @@ export default function Home() {
   }
 
   /** Upload a file and apply it to a specific slot. */
-  async function replaceSlotWithFile(uuid: string, file: File) {
+  async function replaceSlotWithFile(uuid: string, file: File | string) {
     setBusy(true);
     setError(null);
     try {
@@ -109,7 +113,7 @@ export default function Home() {
   }
 
   /** Header one-click: upload a new file and apply it to the live slot. */
-  async function replace(file: File) {
+  async function replace(file: File | string) {
     setBusy(true);
     setError(null);
     try {
@@ -192,7 +196,11 @@ export default function Home() {
             Refresh
           </button>
           <button
-            onClick={() => replaceInput.current?.click()}
+            onClick={() =>
+              isTauri
+                ? api.pickVideoPaths(false).then((p) => p && replace(p[0]))
+                : replaceInput.current?.click()
+            }
             disabled={replaceBusy || slots.length === 0}
             className="btn btn-primary px-4 py-2 text-sm"
           >

@@ -10,7 +10,6 @@ pub enum LibraryStatus {
     Error,
 }
 
-#[allow(dead_code)] // constructed by background conversion jobs (migration step 4)
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum JobState {
     Converting,
