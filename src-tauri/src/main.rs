@@ -13,7 +13,10 @@ mod watcher;
 
 use std::path::PathBuf;
 use std::sync::{Arc, RwLock};
-use tauri::{AppHandle, Manager, State};
+use tauri::menu::{Menu, MenuItem, PredefinedMenuItem};
+use tauri::tray::TrayIconBuilder;
+use tauri::{AppHandle, Manager, RunEvent, State, WindowEvent};
+use tauri_plugin_autostart::MacosLauncher;
 
 use jobs::Jobs;
 use library::{ImportResult, LibraryVideo, MetaCache};
@@ -177,9 +180,39 @@ async fn delete_library_file(paths: State<'_, PathsState>, dir: String, name: St
     blocking(move || library::delete_library_file(&p, &dir, &name)).await?
 }
 
+/// Launched by the login item: stay in the menu bar without opening the window.
+const HIDDEN_ARG: &str = "--hidden";
+
+fn show_main_window(app: &AppHandle) {
+    if let Some(w) = app.get_webview_window("main") {
+        let _ = w.show();
+        let _ = w.set_focus();
+    }
+}
+
+/// Menu-bar icon: the app keeps watching lock/wake while the window is closed.
+fn build_tray(app: &tauri::App) -> tauri::Result<()> {
+    let open = MenuItem::with_id(app, "open", "Open Aerial Manager", true, None::<&str>)?;
+    let quit = MenuItem::with_id(app, "quit", "Quit", true, None::<&str>)?;
+    let menu = Menu::with_items(app, &[&open, &PredefinedMenuItem::separator(app)?, &quit])?;
+    TrayIconBuilder::new()
+        // ponytail: reuses the color app icon; a monochrome template icon would match the menu bar
+        .icon(app.default_window_icon().cloned().expect("bundle icon"))
+        .tooltip("Aerial Manager")
+        .menu(&menu)
+        .on_menu_event(|app, e| match e.id().as_ref() {
+            "open" => show_main_window(app),
+            "quit" => app.exit(0),
+            _ => {}
+        })
+        .build(app)?;
+    Ok(())
+}
+
 fn main() {
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
+        .plugin(tauri_plugin_autostart::init(MacosLauncher::LaunchAgent, Some(vec![HIDDEN_ARG])))
         .setup(|app| {
             let home = PathBuf::from(std::env::var("HOME")?);
             let app_data = app.path().app_data_dir()?;
@@ -193,7 +226,18 @@ fn main() {
             app.manage(AppDirs { home, app_data });
             app.manage(Arc::new(MetaCache::default()));
             app.manage(Jobs::default());
+            build_tray(app)?;
+            if !std::env::args().any(|a| a == HIDDEN_ARG) {
+                show_main_window(app.handle());
+            }
             Ok(())
+        })
+        // closing the window hides it; Quit is in the menu-bar menu
+        .on_window_event(|window, event| {
+            if let WindowEvent::CloseRequested { api, .. } = event {
+                api.prevent_close();
+                let _ = window.hide();
+            }
         })
         .invoke_handler(tauri::generate_handler![
             get_locations,
@@ -211,6 +255,12 @@ fn main() {
             rename_library_file,
             delete_library_file,
         ])
-        .run(tauri::generate_context!())
-        .expect("error while running tauri application");
+        .build(tauri::generate_context!())
+        .expect("error while building tauri application")
+        .run(|app, event| {
+            // clicking the Dock icon brings the hidden window back
+            if let RunEvent::Reopen { .. } = event {
+                show_main_window(app);
+            }
+        });
 }
