@@ -15,9 +15,10 @@ const DOWNSCALE_VF: &str =
     "scale='min(1920,iw)':'min(1080,ih)':force_original_aspect_ratio=decrease,scale=trunc(iw/2)*2:trunc(ih/2)*2";
 
 // Blurred zoomed-to-cover background with the full source composited on top.
+// Two avgblur passes ≈ boxblur=20:2, which is GPL-only and absent from the bundled LGPL ffmpeg.
 const FILL_FC: &str = concat!(
     "[0:v]split=2[bg][fg];",
-    "[bg]scale=1920:1080:force_original_aspect_ratio=increase,crop=1920:1080,boxblur=20:2[bgb];",
+    "[bg]scale=1920:1080:force_original_aspect_ratio=increase,crop=1920:1080,avgblur=sizeX=20,avgblur=sizeX=20[bgb];",
     "[fg]scale=1920:1080:force_original_aspect_ratio=decrease[fgs];",
     "[bgb][fgs]overlay=(W-w)/2:(H-h)/2,format=yuv420p[v]",
 );
@@ -159,7 +160,8 @@ mod tests {
         let a = ffmpeg_args(&meta(Some("h264"), Some(720), Some(1280), Some(30.0)), "in.mp4", "out.mov");
         assert!(has(&a, "hevc_videotoolbox"));
         let fc = arg_after(&a, "-filter_complex").unwrap();
-        assert!(fc.contains("overlay") && fc.contains("boxblur"));
+        // avgblur, not boxblur: boxblur is GPL-only and missing from the bundled LGPL ffmpeg
+        assert!(fc.contains("overlay") && fc.contains("avgblur") && !fc.contains("boxblur"));
         assert_eq!(arg_after(&a, "-map"), Some("[v]"));
     }
 
