@@ -7,6 +7,7 @@ import type { SlotInfo } from "@/lib/slots";
 import { api, isTauri } from "./api";
 import LibraryPanel from "./components/LibraryPanel";
 import LiveHero from "./components/LiveHero";
+import SettingsPanel from "./components/SettingsPanel";
 import SlotBoard from "./components/SlotBoard";
 
 type ReplaceState = "idle" | "uploading" | "applying" | "done";
@@ -26,6 +27,8 @@ export default function Home() {
   const [notice, setNotice] = useState<string | null>(null);
   const [replaceState, setReplaceState] = useState<ReplaceState>("idle");
   const replaceInput = useRef<HTMLInputElement>(null);
+  // desktop only: null = closed; firstRun hides Cancel until the first save
+  const [settings, setSettings] = useState<{ firstRun: boolean } | null>(null);
 
   const refresh = useCallback(async () => {
     try {
@@ -42,6 +45,15 @@ export default function Home() {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     refresh();
   }, [refresh]);
+
+  // desktop first run: ask for library folders before anything else
+  useEffect(() => {
+    if (!isTauri) return;
+    api.settings().then(
+      (s) => !s.configured && setSettings({ firstRun: true }),
+      (e) => setError(String(e)),
+    );
+  }, []);
 
   // while any upload is being reformatted, poll until conversions finish
   const anyConverting = videos.some((v) => v.status === "converting");
@@ -195,6 +207,11 @@ export default function Home() {
           <button onClick={refresh} disabled={busy} className="btn btn-ghost px-3.5 py-2 text-xs">
             Refresh
           </button>
+          {isTauri && (
+            <button onClick={() => setSettings({ firstRun: false })} className="btn btn-ghost px-3.5 py-2 text-xs">
+              Settings
+            </button>
+          )}
           <button
             onClick={() =>
               isTauri
@@ -263,6 +280,9 @@ export default function Home() {
           />
         </div>
       </div>
+      {settings && (
+        <SettingsPanel firstRun={settings.firstRun} onClose={() => setSettings(null)} onSaved={refresh} />
+      )}
     </main>
   );
 }

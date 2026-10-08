@@ -27,6 +27,19 @@ async function withLocations<T>(cmd: string): Promise<T> {
   return invoke<T>(cmd);
 }
 
+/** Desktop settings as returned by get_settings. */
+export interface AppConfig {
+  libraryDirs: string[];
+  backupDir?: string | null;
+  ffmpegPath?: string | null;
+}
+export interface SettingsView {
+  config: AppConfig;
+  configured: boolean;
+  libraryDirs: string[];
+  backupDir: string;
+}
+
 /** Viewer-locale order (the server-side sort is only a fallback). */
 const byName = new Intl.Collator(undefined, { sensitivity: "base" });
 
@@ -72,6 +85,26 @@ export const api = {
     const picked = await open({ multiple, filters: [{ name: "Videos", extensions: ["mp4", "mov", "m4v"] }] });
     if (picked === null) return null;
     return Array.isArray(picked) ? picked : [picked];
+  },
+
+  settings: () => invoke<SettingsView>("get_settings"),
+
+  saveSettings: async (config: AppConfig) => {
+    await invoke("save_settings", { config });
+    locations = null; // folders may have changed
+  },
+
+  /** Merge the web app's data/slots.json; returns how many slot records were added. */
+  importLegacySlots: (file: string) => invoke<number>("import_legacy_slots", { file }),
+
+  pickFolder: async (): Promise<string | null> => {
+    const picked = await open({ directory: true });
+    return typeof picked === "string" ? picked : null;
+  },
+
+  pickSlotsJson: async (): Promise<string | null> => {
+    const picked = await open({ filters: [{ name: "slots.json", extensions: ["json"] }] });
+    return typeof picked === "string" ? picked : null;
   },
 
   /** Desktop: the window swallows file drops, so drag state and dropped paths come from Tauri. */
