@@ -9,6 +9,7 @@ mod slots;
 mod status;
 mod transcode;
 mod wallpaper;
+mod watcher;
 
 use std::path::PathBuf;
 use std::sync::{Arc, RwLock};
@@ -70,6 +71,9 @@ struct SettingsView {
     /// Effective values, including defaults.
     library_dirs: Vec<String>,
     backup_dir: PathBuf,
+    restart_on_lock: bool,
+    /// The old launchd wake helper is still installed (would double-restart).
+    legacy_helper_installed: bool,
 }
 
 #[tauri::command]
@@ -81,7 +85,14 @@ fn get_settings(paths: State<'_, PathsState>, dirs: State<'_, AppDirs>) -> Setti
         config: saved.unwrap_or_default(),
         library_dirs: p.library_dirs.into_values().collect(),
         backup_dir: p.backup_dir,
+        restart_on_lock: p.restart_on_lock,
+        legacy_helper_installed: settings::legacy_helper_plist(&dirs.home).exists(),
     }
+}
+
+#[tauri::command]
+fn remove_legacy_helper(dirs: State<'_, AppDirs>) -> Result<(), String> {
+    settings::remove_legacy_helper(&dirs.home)
 }
 
 #[tauri::command]
@@ -175,6 +186,10 @@ fn main() {
             let paths = Paths::load(&home, &app_data);
             allow_previews(app.handle(), &paths)?;
             app.manage(RwLock::new(paths));
+            let handle = app.handle().clone();
+            watcher::start(app_data.join("wake.log"), move || {
+                handle.state::<PathsState>().read().unwrap().restart_on_lock
+            });
             app.manage(AppDirs { home, app_data });
             app.manage(Arc::new(MetaCache::default()));
             app.manage(Jobs::default());
@@ -185,6 +200,7 @@ fn main() {
             get_settings,
             save_settings,
             import_legacy_slots,
+            remove_legacy_helper,
             get_slots,
             apply_to_slot,
             reapply_all,
