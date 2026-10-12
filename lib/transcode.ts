@@ -71,7 +71,7 @@ export function reencodeArgs(src: string, out: string, meta?: VideoMeta): string
   return [
     "-y", "-loglevel", "error", "-i", src, "-an",
     ...videoFilterArgs(meta),
-    "-c:v", "h264_videotoolbox", "-b:v", "20M", "-tag:v", "avc1",
+    "-c:v", "h264_videotoolbox", "-allow_sw", "1", "-b:v", "20M", "-tag:v", "avc1",
     ...fpsCapArgs(meta),
     "-movflags", "+faststart", out,
   ];
@@ -82,7 +82,7 @@ function hevcSlotArgs(src: string, out: string, meta?: VideoMeta): string[] {
   return [
     "-y", "-loglevel", "error", "-i", src, "-an",
     ...videoFilterArgs(meta),
-    "-c:v", "hevc_videotoolbox", "-b:v", "12M", "-tag:v", "hvc1", "-pix_fmt", "yuv420p",
+    "-c:v", "hevc_videotoolbox", "-allow_sw", "1", "-b:v", "12M", "-tag:v", "hvc1", "-pix_fmt", "yuv420p",
     ...fpsCapArgs(meta),
     "-movflags", "+faststart", out,
   ];

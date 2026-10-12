@@ -67,7 +67,7 @@ fn strings(args: &[&str]) -> Vec<String> {
 pub fn reencode_args(src: &str, out: &str, meta: Option<&VideoMeta>) -> Vec<String> {
     let mut a = strings(&["-y", "-loglevel", "error", "-i", src, "-an"]);
     a.extend(video_filter_args(meta));
-    a.extend(strings(&["-c:v", "h264_videotoolbox", "-b:v", "20M", "-tag:v", "avc1"]));
+    a.extend(strings(&["-c:v", "h264_videotoolbox", "-allow_sw", "1", "-b:v", "20M", "-tag:v", "avc1"]));
     a.extend(fps_cap_args(meta));
     a.extend(strings(&["-movflags", "+faststart", out]));
     a
@@ -76,7 +76,7 @@ pub fn reencode_args(src: &str, out: &str, meta: Option<&VideoMeta>) -> Vec<Stri
 fn hevc_slot_args(src: &str, out: &str, meta: &VideoMeta) -> Vec<String> {
     let mut a = strings(&["-y", "-loglevel", "error", "-i", src, "-an"]);
     a.extend(video_filter_args(Some(meta)));
-    a.extend(strings(&["-c:v", "hevc_videotoolbox", "-b:v", "12M", "-tag:v", "hvc1", "-pix_fmt", "yuv420p"]));
+    a.extend(strings(&["-c:v", "hevc_videotoolbox", "-allow_sw", "1", "-b:v", "12M", "-tag:v", "hvc1", "-pix_fmt", "yuv420p"]));
     a.extend(fps_cap_args(Some(meta)));
     a.extend(strings(&["-movflags", "+faststart", out]));
     a
@@ -145,6 +145,15 @@ mod tests {
         assert!(!has(&a, "copy"));
         assert!(!has(&a, "h264_videotoolbox"));
         assert_eq!(a.last().unwrap(), "out.mov");
+    }
+
+    #[test]
+    fn falls_back_to_software_encoding() {
+        // Intel Macs without an HEVC encoder (and Rosetta) only get one with -allow_sw
+        let hevc = ffmpeg_args(&meta(Some("h264"), Some(1920), Some(1080), Some(30.0)), "in.mp4", "out.mov");
+        let h264 = reencode_args("in.mp4", "out.mov", None);
+        assert_eq!(arg_after(&hevc, "-allow_sw"), Some("1"));
+        assert_eq!(arg_after(&h264, "-allow_sw"), Some("1"));
     }
 
     #[test]
