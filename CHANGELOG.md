@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- **Desktop app**: Aerial Manager is now a macOS menu-bar app (Tauri) instead of a local Next.js web app — no Node, terminal or `.env.local`. Download the universal `.dmg` from GitHub Releases (unsigned for now; see README)
+- ffmpeg is bundled (an LGPL build from source, `scripts/build-ffmpeg.sh`); Homebrew ffmpeg is used when installed
+- Settings screen for library and backup folders, refresh-on-lock and open-at-login; replaces the `LIBRARY_DIRS`/`BACKUP_DIR`/`FFMPEG_PATH` env vars
+- Lock/wake handling is built into the app; the separate wake helper (`scripts/install-wake-helper.sh`) is gone. Settings offers to remove an installed one
+- Import the web app's `data/slots.json` from Settings so Restore keeps working
+- Blur padding uses `avgblur` (LGPL) instead of `boxblur`; VideoToolbox may fall back to software encoding on Macs without an HEVC encoder
+- Removed: the web app, LAN access (`ALLOWED_DEV_ORIGINS`), browser uploads
 - Wake helper restarts WallpaperAgent on screen lock by default again; opt out with `install-wake-helper.sh --no-restart-on-lock`. The macOS 27 report that prompted the opt-in turned out to be an unsupported setup (separate still desktop) and an incompatible video format, not a macOS 27 issue
 - README: explain that macOS has no separate still-desktop option for aerials, and that videos must be applied through the app
 - Wake helper rewritten as a small native Swift watcher (`scripts/wake-watcher.swift`) that restarts WallpaperAgent whenever the lock screen comes up (same effect as re-locking) or the system/display wakes. Replaces sleepwatcher, whose hooks never fired on this setup (no system sleep; display-wake hook silent on Apple Silicon/Tahoe). Events are logged to `~/.aerial-manager/wake.log`. Re-run `sh scripts/install-wake-helper.sh`
