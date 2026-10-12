@@ -31,9 +31,9 @@ jobs:
         with:
           targets: aarch64-apple-darwin,x86_64-apple-darwin
 
-      - name: Cache ffmpeg build
+      - name: Restore ffmpeg build
         id: ffmpeg-cache
-        uses: actions/cache@v4
+        uses: actions/cache/restore@v4
         with:
           path: .ffmpeg-out
           key: ffmpeg-universal-${{ hashFiles('scripts/build-ffmpeg.sh') }}
@@ -44,7 +44,21 @@ jobs:
           brew install meson ninja nasm pkg-config
           sh scripts/build-ffmpeg.sh universal .ffmpeg-out
 
-      - run: sh scripts/stage-ffmpeg.sh .ffmpeg-out universal-apple-darwin
+      # saved right away so a later failing step doesn't throw the 10-minute build away
+      - name: Save ffmpeg build
+        if: steps.ffmpeg-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: .ffmpeg-out
+          key: ${{ steps.ffmpeg-cache.outputs.cache-primary-key }}
+
+      # a universal build compiles each arch on its own and looks up the sidecar per triple;
+      # the lipo'd binary serves all three
+      - name: Stage ffmpeg
+        run: |
+          for t in universal-apple-darwin aarch64-apple-darwin x86_64-apple-darwin; do
+            sh scripts/stage-ffmpeg.sh .ffmpeg-out "$t"
+          done
       - run: npm ci
       - run: npx tauri build --target universal-apple-darwin --config src-tauri/tauri.release.conf.json
 
