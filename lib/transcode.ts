@@ -19,9 +19,10 @@ const DOWNSCALE_VF =
 
 // Blur-pad to 1920x1080: a blurred, zoomed-to-cover background with the full
 // (letterbox-contained) source composited on top — fills black bars, keeps all content.
+// Two avgblur passes ≈ boxblur=20:2, which is GPL-only and absent from the bundled LGPL ffmpeg.
 const FILL_FC =
   "[0:v]split=2[bg][fg];" +
-  "[bg]scale=1920:1080:force_original_aspect_ratio=increase,crop=1920:1080,boxblur=20:2[bgb];" +
+  "[bg]scale=1920:1080:force_original_aspect_ratio=increase,crop=1920:1080,avgblur=sizeX=20,avgblur=sizeX=20[bgb];" +
   "[fg]scale=1920:1080:force_original_aspect_ratio=decrease[fgs];" +
   "[bgb][fgs]overlay=(W-w)/2:(H-h)/2,format=yuv420p[v]";
 
