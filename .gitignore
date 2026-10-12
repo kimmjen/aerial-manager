@@ -47,3 +47,4 @@ dist
 src-tauri/target
 src-tauri/gen
 .ffmpeg-build
+src-tauri/binaries

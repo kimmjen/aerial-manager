@@ -110,16 +110,27 @@ impl Paths {
     }
 }
 
-/// GUI apps don't inherit the shell PATH, so check the Homebrew locations explicitly.
+/// Configured path, else Homebrew (fuller, GPL build), else the LGPL copy bundled
+/// next to the app executable. GUI apps don't inherit the shell PATH, so Homebrew
+/// locations are checked explicitly.
 fn detect_ffmpeg(configured: Option<&str>) -> String {
+    let bundled = std::env::current_exe().ok().and_then(|exe| Some(exe.parent()?.join("ffmpeg")));
+    let candidates: Vec<PathBuf> = ["/opt/homebrew/bin/ffmpeg", "/usr/local/bin/ffmpeg"]
+        .into_iter()
+        .map(PathBuf::from)
+        .chain(bundled)
+        .collect();
+    pick_ffmpeg(configured, &candidates)
+}
+
+fn pick_ffmpeg(configured: Option<&str>, candidates: &[PathBuf]) -> String {
     if let Some(p) = configured {
         return p.to_string();
     }
-    ["/opt/homebrew/bin/ffmpeg", "/usr/local/bin/ffmpeg"]
-        .into_iter()
-        .find(|p| Path::new(p).exists())
-        .unwrap_or("ffmpeg")
-        .to_string()
+    candidates
+        .iter()
+        .find(|p| p.exists())
+        .map_or_else(|| "ffmpeg".to_string(), |p| p.to_string_lossy().into_owned())
 }
 
 #[cfg(test)]
@@ -161,6 +172,24 @@ mod tests {
         let err = save_config(&home, &app_data, &next, &moved).unwrap_err();
         assert!(err.contains("Move them"), "{err}");
         assert_eq!(read_config(&app_data), Some(cfg), "refused save leaves config untouched");
+    }
+
+    #[test]
+    fn ffmpeg_lookup_order() {
+        let dir = std::env::temp_dir().join(format!("aerial-ffmpeg-{}", std::process::id()));
+        std::fs::create_dir_all(&dir).unwrap();
+        let (brew, bundled) = (dir.join("brew-ffmpeg"), dir.join("ffmpeg"));
+        std::fs::write(&bundled, b"").unwrap();
+        let candidates = [brew.clone(), bundled.clone()];
+        // configured path always wins
+        assert_eq!(pick_ffmpeg(Some("/x/ffmpeg"), &candidates), "/x/ffmpeg");
+        // no Homebrew → the copy bundled next to the app
+        assert_eq!(pick_ffmpeg(None, &candidates), bundled.to_string_lossy());
+        // Homebrew present → preferred over the bundled LGPL build
+        std::fs::write(&brew, b"").unwrap();
+        assert_eq!(pick_ffmpeg(None, &candidates), brew.to_string_lossy());
+        // nothing found → rely on PATH
+        assert_eq!(pick_ffmpeg(None, &[dir.join("none")]), "ffmpeg");
     }
 
     #[test]
