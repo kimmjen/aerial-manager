@@ -1,8 +1,5 @@
-"use client";
-
-import { useRef, useState } from "react";
-import type { SlotInfo } from "@/lib/slots";
-import { api, isTauri } from "../api";
+import type { SlotInfo } from "../types";
+import { api } from "../api";
 import HoverVideo from "./HoverVideo";
 import { formatSize } from "./format";
 
@@ -10,20 +7,12 @@ interface Props {
   slots: SlotInfo[];
   busy: boolean;
   onAction: (run: () => Promise<unknown>) => void;
-  onReplaceSlot: (uuid: string, file: File | string) => void;
+  onReplaceSlot: (uuid: string, file: string) => void;
 }
 
 export default function SlotBoard({ slots, busy, onAction, onReplaceSlot }: Props) {
-  const fileInput = useRef<HTMLInputElement>(null);
-  const [pickingFor, setPickingFor] = useState<string | null>(null);
-
   function pickFileFor(uuid: string) {
-    if (isTauri) {
-      api.pickVideoPaths(false).then((p) => p && onReplaceSlot(uuid, p[0]));
-      return;
-    }
-    setPickingFor(uuid);
-    fileInput.current?.click();
+    api.pickVideoPaths(false).then((p) => p && onReplaceSlot(uuid, p[0]));
   }
 
   function restore(uuid: string) {
@@ -41,18 +30,6 @@ export default function SlotBoard({ slots, busy, onAction, onReplaceSlot }: Prop
         <h2 className="section-title">Other slots</h2>
         <span className="text-xs text-[var(--text-faint)]">{slots.length}</span>
       </div>
-      <input
-        ref={fileInput}
-        type="file"
-        accept="video/*"
-        hidden
-        onChange={(e) => {
-          const f = e.target.files?.[0];
-          if (f && pickingFor) onReplaceSlot(pickingFor, f);
-          e.target.value = "";
-          setPickingFor(null);
-        }}
-      />
       <ul className="flex flex-col gap-3">
         {slots.map((s) => (
           <li key={s.uuid} className="glass lift rounded-[20px] p-2.5">

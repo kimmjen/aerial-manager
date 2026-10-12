@@ -1,5 +1,3 @@
-"use client";
-
 import { useRef } from "react";
 
 /** Muted video that plays while hovered and resets on leave. */

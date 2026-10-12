@@ -1,6 +1,4 @@
-"use client";
-
-import type { SlotInfo } from "@/lib/slots";
+import type { SlotInfo } from "../types";
 import { api } from "../api";
 import HoverVideo from "./HoverVideo";
 import { formatSize } from "./format";
