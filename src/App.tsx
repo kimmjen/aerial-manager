@@ -1,10 +1,6 @@
-"use client";
-
-import { useCallback, useEffect, useRef, useState } from "react";
-import type { LibraryDirKey } from "@/lib/config";
-import type { LibraryVideo } from "@/lib/library";
-import type { SlotInfo } from "@/lib/slots";
-import { api, isTauri } from "./api";
+import { useCallback, useEffect, useState } from "react";
+import type { LibraryDirKey, LibraryVideo, SlotInfo } from "./types";
+import { api } from "./api";
 import LibraryPanel from "./components/LibraryPanel";
 import LiveHero from "./components/LiveHero";
 import SettingsPanel from "./components/SettingsPanel";
@@ -26,7 +22,6 @@ export default function Home() {
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [replaceState, setReplaceState] = useState<ReplaceState>("idle");
-  const replaceInput = useRef<HTMLInputElement>(null);
   // desktop only: null = closed; firstRun hides Cancel until the first save
   const [settings, setSettings] = useState<{ firstRun: boolean } | null>(null);
 
@@ -46,9 +41,8 @@ export default function Home() {
     refresh();
   }, [refresh]);
 
-  // desktop first run: ask for library folders before anything else
+  // first run: ask for library folders before anything else
   useEffect(() => {
-    if (!isTauri) return;
     api.settings().then(
       (s) => !s.configured && setSettings({ firstRun: true }),
       (e) => setError(String(e)),
@@ -76,21 +70,10 @@ export default function Home() {
     }
   }
 
-  /** Add a video to the default library dir (upload, or copy a picked path in the desktop app); an existing same-named file is reused. */
-  async function uploadVideo(file: File | string): Promise<{ dir: LibraryDirKey; name: string }> {
-    if (typeof file === "string") {
-      const r = await api.importPaths([file], true);
-      return { dir: r.dir, name: r.saved[0] };
-    }
-    const form = new FormData();
-    form.append("files", file);
-    const res = await api.upload(form);
-    const body = await res.json();
-    if (!res.ok && res.status !== 409) throw new Error(body.error);
-    return {
-      dir: body.dir,
-      name: Array.isArray(body.saved) && body.saved[0] ? body.saved[0] : file.name,
-    };
+  /** Copy a picked video into the default library dir; an existing same-named file is reused. */
+  async function uploadVideo(file: string): Promise<{ dir: LibraryDirKey; name: string }> {
+    const r = await api.importPaths([file], true);
+    return { dir: r.dir, name: r.saved[0] };
   }
 
   const applySlot = api.apply;
@@ -110,7 +93,7 @@ export default function Home() {
   }
 
   /** Upload a file and apply it to a specific slot. */
-  async function replaceSlotWithFile(uuid: string, file: File | string) {
+  async function replaceSlotWithFile(uuid: string, file: string) {
     setBusy(true);
     setError(null);
     try {
@@ -125,7 +108,7 @@ export default function Home() {
   }
 
   /** Header one-click: upload a new file and apply it to the live slot. */
-  async function replace(file: File | string) {
+  async function replace(file: string) {
     setBusy(true);
     setError(null);
     try {
@@ -145,7 +128,6 @@ export default function Home() {
       setReplaceState("idle");
     } finally {
       setBusy(false);
-      if (replaceInput.current) replaceInput.current.value = "";
     }
   }
 
@@ -207,32 +189,16 @@ export default function Home() {
           <button onClick={refresh} disabled={busy} className="btn btn-ghost px-3.5 py-2 text-xs">
             Refresh
           </button>
-          {isTauri && (
-            <button onClick={() => setSettings({ firstRun: false })} className="btn btn-ghost px-3.5 py-2 text-xs">
-              Settings
-            </button>
-          )}
+          <button onClick={() => setSettings({ firstRun: false })} className="btn btn-ghost px-3.5 py-2 text-xs">
+            Settings
+          </button>
           <button
-            onClick={() =>
-              isTauri
-                ? api.pickVideoPaths(false).then((p) => p && replace(p[0]))
-                : replaceInput.current?.click()
-            }
+            onClick={() => api.pickVideoPaths(false).then((p) => p && replace(p[0]))}
             disabled={replaceBusy || slots.length === 0}
             className="btn btn-primary px-4 py-2 text-sm"
           >
             {REPLACE_LABELS[replaceState]}
           </button>
-          <input
-            ref={replaceInput}
-            type="file"
-            accept="video/*"
-            hidden
-            onChange={(e) => {
-              const f = e.target.files?.[0];
-              if (f) replace(f);
-            }}
-          />
         </div>
       </header>
 

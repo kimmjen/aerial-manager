@@ -190,8 +190,8 @@ mod tests {
     }
 
     #[test]
-    fn args_match_the_next_app_exactly() {
-        // byte-for-byte parity with lib/transcode.ts for a vertical H.264 source
+    fn vertical_args_are_pinned() {
+        // exact args for a vertical H.264 source (frozen from the web app's lib/transcode.ts)
         let a = ffmpeg_args(&meta(Some("h264"), Some(720), Some(1280), Some(30.0)), "in.mp4", "out.mov");
         let expected = include_str!("../tests/fixtures/ffmpeg-args-vertical.json");
         let expected: Vec<String> = serde_json::from_str(expected).unwrap();

@@ -1,11 +1,7 @@
-"use client";
-
 import { useEffect, useRef, useState } from "react";
-import type { LibraryVideo } from "@/lib/library";
-import type { LibraryDirKey } from "@/lib/config";
-import type { SlotInfo } from "@/lib/slots";
+import type { LibraryDirKey, LibraryVideo, SlotInfo } from "../types";
 import HoverVideo from "./HoverVideo";
-import { api, isTauri } from "../api";
+import { api } from "../api";
 import { formatSize, formatVideoSpec } from "./format";
 
 interface Props {
@@ -29,34 +25,23 @@ export default function LibraryPanel({ videos, slots, busy, onChanged, onError, 
   const [uploading, setUploading] = useState(false);
   const [menuFor, setMenuFor] = useState<string | null>(null);
   const [dragging, setDragging] = useState(false);
-  const dragDepth = useRef(0);
-  const fileInput = useRef<HTMLInputElement>(null);
 
   const dirs = Array.from(new Set(videos.map((v) => v.dir)));
   const shown = videos.filter((v) => dirFilter === "all" || v.dir === dirFilter);
   // live slot first so it's the top choice in every menu
   const orderedSlots = [...slots].sort((a, b) => Number(b.isSelected) - Number(a.isSelected));
 
-  /** Upload files (web) or copy picked/dropped paths (desktop) into the library. */
-  async function upload(files: FileList | string[] | null) {
-    if (!files || files.length === 0) return;
+  /** Copy picked or dropped files into the library. */
+  async function upload(files: string[]) {
+    if (files.length === 0) return;
     setUploading(true);
     try {
-      if (Array.isArray(files)) {
-        await api.importPaths(files, false);
-      } else {
-        const form = new FormData();
-        for (const f of Array.from(files)) form.append("files", f);
-        const res = await api.upload(form);
-        const body = await res.json();
-        if (!res.ok) throw new Error(body.error);
-      }
+      await api.importPaths(files, false);
       onChanged();
     } catch (e) {
       onError(String(e));
     } finally {
       setUploading(false);
-      if (fileInput.current) fileInput.current.value = "";
     }
   }
 
@@ -81,13 +66,12 @@ export default function LibraryPanel({ videos, slots, busy, onChanged, onError, 
     }
   }
 
-  // desktop: Tauri intercepts file drops before the DOM sees them
+  // Tauri intercepts file drops before the DOM sees them
   const uploadRef = useRef(upload);
   useEffect(() => {
     uploadRef.current = upload;
   });
   useEffect(() => {
-    if (!isTauri) return;
     const unlisten = api.onFileDrop(setDragging, (paths) => uploadRef.current(paths));
     return () => {
       unlisten.then((f) => f());
@@ -95,24 +79,7 @@ export default function LibraryPanel({ videos, slots, busy, onChanged, onError, 
   }, []);
 
   return (
-    <section
-      onDragEnter={(e) => {
-        e.preventDefault();
-        dragDepth.current += 1;
-        setDragging(true);
-      }}
-      onDragOver={(e) => e.preventDefault()}
-      onDragLeave={() => {
-        dragDepth.current -= 1;
-        if (dragDepth.current <= 0) setDragging(false);
-      }}
-      onDrop={(e) => {
-        e.preventDefault();
-        dragDepth.current = 0;
-        setDragging(false);
-        upload(e.dataTransfer.files);
-      }}
-      className="glass relative overflow-hidden rounded-[24px] p-4 sm:p-5"
+    <section className="glass relative overflow-hidden rounded-[24px] p-4 sm:p-5"
     >
       <div className="mb-4 flex flex-wrap items-center gap-3">
         <h2 className="section-title">Library</h2>
@@ -128,22 +95,12 @@ export default function LibraryPanel({ videos, slots, busy, onChanged, onError, 
             </div>
           )}
           <button
-            onClick={() =>
-              isTauri ? api.pickVideoPaths(true).then((p) => p && upload(p)) : fileInput.current?.click()
-            }
+            onClick={() => api.pickVideoPaths(true).then((p) => p && upload(p))}
             disabled={uploading}
             className="btn btn-glass px-4 py-2 text-xs"
           >
             {uploading ? "Uploading…" : "Upload"}
           </button>
-          <input
-            ref={fileInput}
-            type="file"
-            accept="video/*"
-            multiple
-            hidden
-            onChange={(e) => upload(e.target.files)}
-          />
         </div>
       </div>
 
