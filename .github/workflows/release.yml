@@ -1,0 +1,63 @@
+name: Release
+
+# Push a tag like v0.5.0 → universal .dmg on a draft GitHub Release.
+# Run it by hand (Actions → Release → Run workflow) to get the .dmg as a build artifact instead.
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  dmg:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Tag matches the app version
+        if: github.ref_type == 'tag'
+        run: |
+          v=$(node -p "require('./src-tauri/tauri.conf.json').version")
+          [ "$GITHUB_REF_NAME" = "v$v" ] || { echo "tag $GITHUB_REF_NAME != v$v in tauri.conf.json"; exit 1; }
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-apple-darwin,x86_64-apple-darwin
+
+      - name: Cache ffmpeg build
+        id: ffmpeg-cache
+        uses: actions/cache@v4
+        with:
+          path: .ffmpeg-out
+          key: ffmpeg-universal-${{ hashFiles('scripts/build-ffmpeg.sh') }}
+
+      - name: Build LGPL ffmpeg
+        if: steps.ffmpeg-cache.outputs.cache-hit != 'true'
+        run: |
+          brew install meson ninja nasm pkg-config
+          sh scripts/build-ffmpeg.sh universal .ffmpeg-out
+
+      - run: sh scripts/stage-ffmpeg.sh .ffmpeg-out universal-apple-darwin
+      - run: npm ci
+      - run: npx tauri build --target universal-apple-darwin --config src-tauri/tauri.release.conf.json
+
+      - uses: actions/upload-artifact@v4
+        if: github.ref_type != 'tag'
+        with:
+          name: dmg
+          path: src-tauri/target/universal-apple-darwin/release/bundle/dmg/*.dmg
+
+      - name: Draft release
+        if: github.ref_type == 'tag'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" --draft --generate-notes \
+            src-tauri/target/universal-apple-darwin/release/bundle/dmg/*.dmg

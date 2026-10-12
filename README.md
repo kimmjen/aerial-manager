@@ -74,6 +74,15 @@ Use at your own risk — this modifies files inside `~/Library/Application Suppo
 
 Aerial Manager is moving from this local web app to a native macOS menu-bar app built with [Tauri](https://tauri.app), so it no longer needs Node, a terminal, or a separate wake helper. The plan and progress are in [`docs/tauri-migration.md`](docs/tauri-migration.md). Until it ships, use the web app above.
 
+### Installing a release
+
+1. Download the `.dmg` from [Releases](https://github.com/kimmjen/aerial-manager/releases) and drag **Aerial Manager** into Applications. It runs on Apple Silicon and Intel, and ffmpeg is included.
+2. The app is not signed yet, so macOS blocks the first launch. Open it once, then go to **System Settings → Privacy & Security** and click **Open Anyway**. (Or run `xattr -dr com.apple.quarantine "/Applications/Aerial Manager.app"`.)
+
+The bundled ffmpeg is an LGPL build made from source by [`scripts/build-ffmpeg.sh`](scripts/build-ffmpeg.sh); its license, source version and build options are inside the app at `Contents/Resources/licenses/`. If Homebrew ffmpeg is installed, the app uses that instead.
+
+### Running from source
+
 To try the work in progress (needs [Rust](https://rustup.rs)):
 
 ```bash
