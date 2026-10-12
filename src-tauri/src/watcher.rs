@@ -1,6 +1,6 @@
 //! Restart WallpaperAgent on wake (and, if enabled, on lock) so the lock-screen
 //! aerial resumes — macOS Tahoe sometimes leaves it black/frozen after sleep.
-//! Replaces scripts/wake-watcher.swift + its launchd agent.
+//! Replaces the web app's launchd wake helper (scripts/wake-watcher.swift).
 use block2::RcBlock;
 use objc2_app_kit::{NSWorkspace, NSWorkspaceDidWakeNotification, NSWorkspaceScreensDidWakeNotification};
 use objc2_foundation::{NSDistributedNotificationCenter, NSNotification, NSOperationQueue, NSString};
