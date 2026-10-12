@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v0.5.0 — 2026-10-12
 
 - **Desktop app**: Aerial Manager is now a macOS menu-bar app (Tauri) instead of a local Next.js web app — no Node, terminal or `.env.local`. Download the universal `.dmg` from GitHub Releases (unsigned for now; see README)
 - ffmpeg is bundled (an LGPL build from source, `scripts/build-ffmpeg.sh`); Homebrew ffmpeg is used when installed
