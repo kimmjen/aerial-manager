@@ -40,7 +40,7 @@ The app is not signed with an Apple Developer ID yet, so macOS blocks it the fir
 
 <img src="docs/install/2-not-opened.png" width="300" alt="&quot;Aerial Manager&quot; Not Opened dialog with Move to Trash and Done buttons">
 
-**3. Allow it.** Open **System Settings → Privacy & Security**, scroll down to **Security**, and click **Open Anyway** next to "Aerial Manager was blocked". Confirm with your password or Touch ID, then click **Open Anyway** again in the dialog that follows.
+**3. Allow it.** Open **System Settings → Privacy & Security**, scroll down to **Security**, and click **Open Anyway** next to "Aerial Manager was blocked". If macOS asks, confirm with your password or Touch ID and click **Open** (or **Open Anyway**) once more.
 
 <img src="docs/install/3-open-anyway.png" width="500" alt="Privacy &amp; Security settings showing Aerial Manager was blocked, with an Open Anyway button">
 
