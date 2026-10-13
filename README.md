@@ -30,9 +30,23 @@ Aerial Manager swaps those files with videos of your choice (converted to the HE
 
 ## Install
 
-1. Download the `.dmg` from [Releases](https://github.com/kimmjen/aerial-manager/releases) and drag **Aerial Manager** into Applications. It runs on Apple Silicon and Intel, and ffmpeg is included.
-2. The app is not signed yet, so macOS blocks the first launch. Open it once, then go to **System Settings → Privacy & Security** and click **Open Anyway**. (Or run `xattr -dr com.apple.quarantine "/Applications/Aerial Manager.app"`.)
-3. On first launch, pick the folders that hold your videos. Then click **Replace Lock Screen**, pick a video, and lock your screen (Ctrl+Cmd+Q).
+The app is not signed with an Apple Developer ID yet, so macOS blocks it the first time. You only have to allow it once.
+
+**1. Download and install.** Download the `.dmg` from [Releases](https://github.com/kimmjen/aerial-manager/releases), open it, and drag **Aerial Manager** onto **Applications**. It runs on Apple Silicon and Intel, and ffmpeg is included.
+
+<img src="docs/install/1-drag.png" width="380" alt="The disk image window with Aerial Manager and an Applications shortcut">
+
+**2. Open it once.** Open Aerial Manager from Applications. macOS says it was not opened — click **Done** (not Move to Trash).
+
+<img src="docs/install/2-not-opened.png" width="300" alt="&quot;Aerial Manager&quot; Not Opened dialog with Move to Trash and Done buttons">
+
+**3. Allow it.** Open **System Settings → Privacy & Security**, scroll down to **Security**, and click **Open Anyway** next to "Aerial Manager was blocked". Confirm with your password or Touch ID, then click **Open Anyway** again in the dialog that follows.
+
+<img src="docs/install/3-open-anyway.png" width="500" alt="Privacy &amp; Security settings showing Aerial Manager was blocked, with an Open Anyway button">
+
+From then on it opens normally. (Prefer the terminal? `xattr -dr com.apple.quarantine "/Applications/Aerial Manager.app"` does the same.)
+
+**4. Set it up.** On first launch, pick the folders that hold your videos. Then click **Replace Lock Screen**, pick a video, and lock your screen (Ctrl+Cmd+Q).
 
 Closing the window keeps the app in the menu bar; quit it from the menu-bar icon.
 
