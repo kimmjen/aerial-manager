@@ -73,5 +73,9 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release create "$GITHUB_REF_NAME" --draft --generate-notes \
+          v="${GITHUB_REF_NAME#v}"
+          # install steps for people landing on the release page, then this version's CHANGELOG section
+          sed "s/{{version}}/$v/g" .github/release-notes.md > notes.md
+          awk -v h="## v$v " 'index($0, h) == 1 {on=1; next} /^## / {on=0} on' CHANGELOG.md >> notes.md
+          gh release create "$GITHUB_REF_NAME" --draft --notes-file notes.md \
             src-tauri/target/universal-apple-darwin/release/bundle/dmg/*.dmg
