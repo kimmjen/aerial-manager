@@ -196,8 +196,9 @@ fn build_tray(app: &tauri::App) -> tauri::Result<()> {
     let quit = MenuItem::with_id(app, "quit", "Quit", true, None::<&str>)?;
     let menu = Menu::with_items(app, &[&open, &PredefinedMenuItem::separator(app)?, &quit])?;
     TrayIconBuilder::new()
-        // ponytail: reuses the color app icon; a monochrome template icon would match the menu bar
-        .icon(app.default_window_icon().cloned().expect("bundle icon"))
+        // template image: macOS tints it to match a light or dark menu bar
+        .icon(tauri::image::Image::from_bytes(include_bytes!("../icons/tray.png"))?)
+        .icon_as_template(true)
         .tooltip("Aerial Manager")
         .menu(&menu)
         .on_menu_event(|app, e| match e.id().as_ref() {
