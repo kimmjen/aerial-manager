@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import type { LibraryDirKey, LibraryVideo, SlotInfo } from "./types";
 import { api } from "./api";
+import appIcon from "../src-tauri/icons/128x128@2x.png";
 import LibraryPanel from "./components/LibraryPanel";
 import LiveHero from "./components/LiveHero";
 import SettingsPanel from "./components/SettingsPanel";
@@ -163,16 +164,8 @@ export default function Home() {
   return (
     <main className="mx-auto w-full max-w-6xl px-5 pb-24 pt-5 sm:px-8">
       <header className="reveal glass-raised sticky top-4 z-40 mb-8 flex items-center gap-3 rounded-full px-3.5 py-2.5 sm:px-5">
-        <span
-          aria-hidden
-          className="grid h-8 w-8 place-items-center rounded-[10px] shadow-md"
-          style={{ background: "linear-gradient(140deg, var(--accent-hi), #14b8c6)" }}
-        >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-            <path d="M3 19l5.5-8 4 5 3-4 5.5 7z" />
-            <circle cx="7.5" cy="6.5" r="2" />
-          </svg>
-        </span>
+        {/* the app icon has transparent margins (macOS grid), so scale it past the box */}
+        <img src={appIcon} alt="" aria-hidden className="h-10 w-10 -m-1" />
         <div className="leading-tight">
           <h1 className="text-sm font-semibold tracking-tight text-[var(--text)]">Aerial Manager</h1>
           <p className="hidden text-[11px] text-[var(--text-faint)] sm:block">macOS lock screen videos</p>

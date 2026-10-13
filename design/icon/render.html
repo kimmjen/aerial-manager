@@ -1,0 +1,5 @@
+<!doctype html>
+<!-- Renders an SVG here to PNG with transparency:
+  chrome --headless=new --default-background-color=00000000 --window-size=N,N --screenshot=out.png "file://$PWD/render.html?src=app-icon.svg&size=N"
+  then: npx tauri icon app-icon.png (copy the sizes tauri.conf.json lists) --><html><body style="margin:0;background:transparent"><img id="i" style="display:block"></body>
+<script>const p=new URLSearchParams(location.search);const i=document.getElementById("i");i.src=p.get("src");i.width=i.height=+p.get("size");</script></html>

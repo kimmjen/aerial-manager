@@ -1,0 +1,70 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#26335f"/>
+      <stop offset="1" stop-color="#0b1022"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0.5" cy="0.78" r="0.55">
+      <stop offset="0" stop-color="#ff7a9a" stop-opacity="0.35"/>
+      <stop offset="1" stop-color="#ff7a9a" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="rim" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#fff" stop-opacity="0.28"/>
+      <stop offset="0.25" stop-color="#fff" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="shackle" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="1" stop-color="#c3cbe0"/>
+    </linearGradient>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffc58a"/>
+      <stop offset="0.45" stop-color="#ff7d93"/>
+      <stop offset="1" stop-color="#7b5cf0"/>
+    </linearGradient>
+    <radialGradient id="sun" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#fff4dc"/>
+      <stop offset="0.45" stop-color="#ffe2b0" stop-opacity="0.9"/>
+      <stop offset="1" stop-color="#ffd0a0" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="far" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#8d5fc9"/>
+      <stop offset="1" stop-color="#5a3fa8"/>
+    </linearGradient>
+    <linearGradient id="near" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#3b2a7a"/>
+      <stop offset="1" stop-color="#1c1545"/>
+    </linearGradient>
+    <linearGradient id="gloss" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#fff" stop-opacity="0.45"/>
+      <stop offset="0.18" stop-color="#fff" stop-opacity="0.06"/>
+      <stop offset="0.5" stop-color="#fff" stop-opacity="0"/>
+    </linearGradient>
+    <clipPath id="squircle"><rect x="100" y="100" width="824" height="824" rx="185"/></clipPath>
+    <clipPath id="body"><rect x="282" y="452" width="460" height="356" rx="92"/></clipPath>
+    <filter id="shadow" x="-30%" y="-30%" width="160%" height="170%">
+      <feDropShadow dx="0" dy="22" stdDeviation="26" flood-color="#000" flood-opacity="0.45"/>
+    </filter>
+  </defs>
+
+  <!-- tile -->
+  <g clip-path="url(#squircle)">
+    <rect x="100" y="100" width="824" height="824" fill="url(#bg)"/>
+    <rect x="100" y="100" width="824" height="824" fill="url(#glow)"/>
+  </g>
+  <rect x="101.5" y="101.5" width="821" height="821" rx="184" fill="none" stroke="url(#rim)" stroke-width="3"/>
+
+  <!-- shackle -->
+  <path d="M378 470 V378 a134 134 0 0 1 268 0 V470" fill="none" stroke="url(#shackle)" stroke-width="58" stroke-linecap="round" filter="url(#shadow)"/>
+
+  <!-- body: a window onto a dusk aerial -->
+  <g filter="url(#shadow)">
+    <g clip-path="url(#body)">
+      <rect x="282" y="452" width="460" height="356" fill="url(#sky)"/>
+      <circle cx="512" cy="652" r="120" fill="url(#sun)"/>
+      <path d="M282 690 C350 640 410 630 470 668 C530 706 600 650 660 640 C700 634 724 646 742 656 V808 H282Z" fill="url(#far)"/>
+      <path d="M282 742 C360 700 440 706 520 738 C600 770 680 728 742 716 V808 H282Z" fill="url(#near)"/>
+      <rect x="282" y="452" width="460" height="356" fill="url(#gloss)"/>
+    </g>
+  </g>
+  <rect x="283.5" y="453.5" width="457" height="353" rx="90.5" fill="none" stroke="#fff" stroke-opacity="0.35" stroke-width="3"/>
+</svg>
