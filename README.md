@@ -32,7 +32,7 @@ Aerial Manager swaps those files with videos of your choice (converted to the HE
 
 The app is not signed with an Apple Developer ID yet, so macOS blocks it the first time. You only have to allow it once.
 
-**1. Download and install.** Download the `.dmg` from [Releases](https://github.com/kimmjen/aerial-manager/releases), open it, and drag **Aerial Manager** onto **Applications**. It runs on Apple Silicon and Intel, and ffmpeg is included.
+**1. Download and install.** Download `Aerial.Manager_<version>_universal.dmg` from the [latest release](https://github.com/kimmjen/aerial-manager/releases/latest), open it, and drag **Aerial Manager** onto **Applications**. It runs on Apple Silicon and Intel, and ffmpeg is included.
 
 <img src="docs/install/1-drag.png" width="380" alt="The disk image window with Aerial Manager and an Applications shortcut">
 
@@ -46,11 +46,31 @@ The app is not signed with an Apple Developer ID yet, so macOS blocks it the fir
 
 From then on it opens normally. (Prefer the terminal? `xattr -dr com.apple.quarantine "/Applications/Aerial Manager.app"` does the same.)
 
-**4. Set it up.** On first launch, pick the folders that hold your videos. Then click **Replace Lock Screen**, pick a video, and lock your screen (Ctrl+Cmd+Q).
+**4. Download an aerial.** The app replaces aerial videos macOS has already downloaded, so you need at least one. Open **System Settings → Wallpaper**, pick any aerial (one of the moving video wallpapers), and wait for it to finish downloading. Keep an aerial as your wallpaper — the lock screen plays the wallpaper's aerial.
+
+**5. Put your video on the lock screen.** On first launch, pick the folders that hold your videos and keep **Open at login** on. Then click **Replace Lock Screen**, pick a video, and lock your screen (Ctrl+Cmd+Q).
 
 Closing the window keeps the app in the menu bar; quit it from the menu-bar icon.
 
 **Coming from the old web version?** In Settings, use **Import slots.json** (its `data/slots.json`) so Restore keeps working, and remove the old wake helper when the app offers to.
+
+## Updating
+
+Download the new `.dmg` from the [latest release](https://github.com/kimmjen/aerial-manager/releases/latest), quit Aerial Manager from its menu-bar icon, and drag the new version onto Applications (replace the old one). Because the app is unsigned, allow it once more with **Open Anyway** (step 3). Your settings, library and slots are kept.
+
+## Troubleshooting
+
+- **"No aerial slot found"** — no aerial has been downloaded yet; see step 4.
+- **The lock screen is black or frozen** — make sure Aerial Manager is running (menu-bar icon) so it can refresh the wallpaper; locking again (Ctrl+Cmd+Q) also brings it back. If a slot still shows black, click **Re-apply all**.
+- **The lock screen shows Apple's video, not mine** — the lock screen plays the slot that is marked **Live**; click **Set live** on the slot that holds your video, or check that your wallpaper is still an aerial.
+- **"Aerial Manager" can't be opened / Not Opened** — the one-time unsigned-app step; see step 3.
+- **The desktop is grey** — the slot holds a video macOS can't play; apply it again through the app so it is converted.
+
+## Uninstall
+
+1. In the app, click **Restore** on every slot that holds your video (or **Restore original** on the live one) so the Apple aerials come back.
+2. Turn off **Open at login** in Settings, then quit from the menu-bar icon.
+3. Delete `Aerial Manager` from Applications. Optionally delete `~/Library/Application Support/io.github.kimmjen.aerial-manager` and the backup folder (`~/.aerial-manager/backups` by default).
 
 ## Settings
 
