@@ -98,6 +98,16 @@ fn remove_legacy_helper(dirs: State<'_, AppDirs>) -> Result<(), String> {
     settings::remove_legacy_helper(&dirs.home)
 }
 
+/// Where aerials are downloaded; the empty state sends first-time users here.
+#[tauri::command]
+fn open_wallpaper_settings() -> Result<(), String> {
+    std::process::Command::new("/usr/bin/open")
+        .arg("x-apple.systempreferences:com.apple.Wallpaper-Settings.extension")
+        .status()
+        .map(|_| ())
+        .map_err(|e| e.to_string())
+}
+
 #[tauri::command]
 fn save_settings(app: AppHandle, paths: State<'_, PathsState>, dirs: State<'_, AppDirs>, config: AppConfig) -> Result<(), String> {
     let next = settings::save_config(&dirs.home, &dirs.app_data, &current(&paths), &config)?;
@@ -246,6 +256,7 @@ fn main() {
             save_settings,
             import_legacy_slots,
             remove_legacy_helper,
+            open_wallpaper_settings,
             get_slots,
             apply_to_slot,
             reapply_all,

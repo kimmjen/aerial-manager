@@ -11,7 +11,7 @@ type ReplaceState = "idle" | "uploading" | "applying" | "done";
 
 const REPLACE_LABELS: Record<ReplaceState, string> = {
   idle: "Replace Lock Screen",
-  uploading: "Uploading…",
+  uploading: "Adding…",
   applying: "Applying…",
   done: "Done",
 };
@@ -40,6 +40,9 @@ export default function Home() {
     // initial fetch-on-mount; setState only fires after the awaited fetches resolve
     // eslint-disable-next-line react-hooks/set-state-in-effect
     refresh();
+    // coming back from System Settings (e.g. after downloading an aerial) shows the new slots
+    window.addEventListener("focus", refresh);
+    return () => window.removeEventListener("focus", refresh);
   }, [refresh]);
 
   // first run: ask for library folders before anything else
@@ -77,7 +80,16 @@ export default function Home() {
     return { dir: r.dir, name: r.saved[0] };
   }
 
-  const applySlot = api.apply;
+  /** Apply, then tell the user how to see it: lock now if the slot is live, otherwise set it live. */
+  async function applySlot(uuid: string, dir: string, name: string) {
+    await api.apply(uuid, dir, name);
+    const live = slots.find((s) => s.uuid === uuid)?.isSelected;
+    setNotice(
+      live
+        ? "Your video is on the lock screen. Lock your Mac (Ctrl+Cmd+Q) to see it."
+        : `Applied to slot ${uuid.slice(0, 8)}. Click Set live on it to show it on the lock screen.`,
+    );
+  }
 
   /** Apply a library video to a chosen slot. */
   async function applyVideoToSlot(v: LibraryVideo, uuid: string) {

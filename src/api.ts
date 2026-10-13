@@ -76,6 +76,8 @@ export const api = {
 
   removeLegacyHelper: () => invoke<void>("remove_legacy_helper"),
 
+  openWallpaperSettings: () => invoke<void>("open_wallpaper_settings"),
+
   /** Merge the web app's data/slots.json; returns how many slot records were added. */
   importLegacySlots: (file: string) => invoke<number>("import_legacy_slots", { file }),
 

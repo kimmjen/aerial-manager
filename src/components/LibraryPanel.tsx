@@ -99,7 +99,7 @@ export default function LibraryPanel({ videos, slots, busy, onChanged, onError, 
             disabled={uploading}
             className="btn btn-glass px-4 py-2 text-xs"
           >
-            {uploading ? "Uploading…" : "Upload"}
+            {uploading ? "Adding…" : "Add videos"}
           </button>
         </div>
       </div>
@@ -200,13 +200,15 @@ export default function LibraryPanel({ videos, slots, busy, onChanged, onError, 
           );
         })}
       </ul>
-      {shown.length === 0 && <p className="px-1 py-8 text-center text-sm text-[var(--text-dim)]">No videos.</p>}
+      {shown.length === 0 && <p className="px-1 py-8 text-center text-sm text-[var(--text-dim)]">
+          No videos yet. Click Add videos or drop video files here.
+        </p>}
 
       {/* drag-and-drop overlay */}
       {dragging && (
         <div className="pointer-events-none absolute inset-0 z-30 flex items-center justify-center rounded-[24px] border-2 border-dashed border-[var(--accent-hi)] bg-[color-mix(in_oklab,var(--accent)_18%,transparent)] backdrop-blur-md">
           <span className="rounded-full bg-black/50 px-5 py-2.5 text-sm font-medium text-[var(--text)]">
-            Drop video files to upload
+            Drop videos to add them
           </span>
         </div>
       )}

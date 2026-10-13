@@ -60,7 +60,7 @@ Download the new `.dmg` from the [latest release](https://github.com/kimmjen/aer
 
 ## Troubleshooting
 
-- **"No aerial slot found"** — no aerial has been downloaded yet; see step 4.
+- **"Download an aerial first"** — no aerial has been downloaded yet. Click **Open Wallpaper Settings**, pick an aerial, and come back; it shows up on its own (step 4).
 - **The lock screen is black or frozen** — make sure Aerial Manager is running (menu-bar icon) so it can refresh the wallpaper; locking again (Ctrl+Cmd+Q) also brings it back. If a slot still shows black, click **Re-apply all**.
 - **The lock screen shows Apple's video, not mine** — the lock screen plays the slot that is marked **Live**; click **Set live** on the slot that holds your video, or check that your wallpaper is still an aerial.
 - **"Aerial Manager" can't be opened / Not Opened** — the one-time unsigned-app step; see step 3.
