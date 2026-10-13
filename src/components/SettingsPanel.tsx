@@ -169,16 +169,19 @@ export default function SettingsPanel({ firstRun, onClose, onSaved }: Props) {
           </section>
         )}
 
-        <section className="mt-5">
-          <h3 className="section-title mb-2">Coming from the web app?</h3>
-          <p className="mb-2 text-xs text-[var(--text-dim)]">
-            Import its <code className="font-mono">data/slots.json</code> so the app knows which of your videos are in
-            which slot (needed for Restore).
-          </p>
-          <button onClick={importLegacy} className="btn btn-glass px-3 py-1.5 text-xs">
-            Import slots.json…
-          </button>
-        </section>
+        {/* new users don't need this on first run; web-app users have the old helper installed */}
+        {(!firstRun || legacyHelper) && (
+          <section className="mt-5">
+            <h3 className="section-title mb-2">Coming from the web app?</h3>
+            <p className="mb-2 text-xs text-[var(--text-dim)]">
+              Import its <code className="font-mono">data/slots.json</code> so the app knows which of your videos are in
+              which slot (needed for Restore).
+            </p>
+            <button onClick={importLegacy} className="btn btn-glass px-3 py-1.5 text-xs">
+              Import slots.json…
+            </button>
+          </section>
+        )}
 
         {error && <p className="mt-4 text-sm text-[var(--danger)]">{error}</p>}
         {notice && <p className="mt-4 text-sm text-[var(--live)]">{notice}</p>}

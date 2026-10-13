@@ -14,8 +14,14 @@ export default function LiveHero({ slot, busy, onAction }: Props) {
   if (!slot) {
     return (
       <section className="glass rounded-[28px] p-8 text-sm text-[var(--text-dim)]">
-        No aerial slots found. Download an aerial wallpaper in{" "}
-        <span className="text-[var(--text)]">System Settings → Wallpaper</span> first.
+        <p className="text-base font-medium text-[var(--text)]">Download an aerial first</p>
+        <p className="mt-1">
+          Aerial Manager replaces the aerial videos macOS has downloaded. Pick any aerial in Wallpaper settings, let it
+          finish downloading, and keep it as your wallpaper — it shows up here.
+        </p>
+        <button onClick={() => api.openWallpaperSettings()} className="btn btn-primary mt-4 px-4 py-2 text-sm">
+          Open Wallpaper Settings
+        </button>
       </section>
     );
   }
