@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.5.1 — 2026-10-13
+
+- New app icon (a padlock framing a dusk aerial) and a monochrome menu-bar icon that follows light/dark mode
+- README: step-by-step install for the unsigned app, with screenshots
+
 ## v0.5.0 — 2026-10-12
 
 - **Desktop app**: Aerial Manager is now a macOS menu-bar app (Tauri) instead of a local Next.js web app — no Node, terminal or `.env.local`. Download the universal `.dmg` from GitHub Releases (unsigned for now; see README)
