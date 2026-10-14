@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.5.2 — 2026-10-14
+
+- No aerial downloaded yet? The app now explains it and opens Wallpaper settings for you; new slots appear as soon as you come back
+- After applying a video, the app tells you how to see it: lock your Mac, or click Set live if it went to another slot
+- "Upload" is now "Add videos"; an empty library explains how to add videos
+- First-run settings no longer show the web-app import to new users
+
 ## v0.5.1 — 2026-10-13
 
 - New app icon (a padlock framing a dusk aerial) and a monochrome menu-bar icon that follows light/dark mode
