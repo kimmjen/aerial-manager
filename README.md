@@ -2,6 +2,8 @@
 
 Put **your own videos on the macOS lock screen** — a small menu-bar app.
 
+Free and open source under the [MIT License](LICENSE): anyone can use, copy, modify and share it, including commercially.
+
 ![Aerial Manager](docs/screenshot.png)
 
 macOS plays "aerial" videos on the lock screen and as a screen saver. On **macOS 26 (Tahoe)** the downloaded aerial videos live in a user-writable folder:
@@ -120,4 +122,6 @@ Release builds bundle ffmpeg: `sh scripts/build-ffmpeg.sh universal .ffmpeg-out`
 
 ## License
 
-[MIT](LICENSE)
+Aerial Manager is open source under the [MIT License](LICENSE). Anyone may use, copy, modify, merge, publish, distribute, sublicense and sell copies, free of charge, as long as the copyright and license notice are kept. It comes without warranty.
+
+The bundled ffmpeg is licensed separately under the LGPL (see [ffmpeg](#ffmpeg)).
