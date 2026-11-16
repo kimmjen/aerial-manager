@@ -1,4 +1,4 @@
-Put your own videos on the macOS lock screen.
+Put your own videos on the macOS lock screen. Free and open source ([MIT License](https://github.com/kimmjen/aerial-manager/blob/main/LICENSE)): anyone can use it.
 
 **Requirements:** macOS 26 (Tahoe), Apple Silicon or Intel, and at least one aerial wallpaper downloaded in System Settings → Wallpaper.
 
