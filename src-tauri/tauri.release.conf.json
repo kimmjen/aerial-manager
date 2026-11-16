@@ -7,6 +7,7 @@
       "binaries/ffmpeg-LICENSE.txt": "licenses/ffmpeg-LICENSE.txt",
       "binaries/dav1d-LICENSE.txt": "licenses/dav1d-LICENSE.txt",
       "binaries/ffmpeg-build-info.txt": "licenses/ffmpeg-build-info.txt"
-    }
+    },
+    "macOS": { "signingIdentity": "-" }
   }
 }
