@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.5.3 — 2026-11-16
+
+- macOS now remembers the app's folder permissions: the app bundle is ad-hoc signed, so "allow access to the Documents folder" no longer comes back after you allow it. After updating to this version, allow it once more
+- README and release notes say that the app is free and open source (MIT) for anyone to use
+
 ## v0.5.2 — 2026-10-14
 
 - No aerial downloaded yet? The app now explains it and opens Wallpaper settings for you; new slots appear as soon as you come back

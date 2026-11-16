@@ -58,7 +58,7 @@ Closing the window keeps the app in the menu bar; quit it from the menu-bar icon
 
 ## Updating
 
-Download the new `.dmg` from the [latest release](https://github.com/kimmjen/aerial-manager/releases/latest), quit Aerial Manager from its menu-bar icon, and drag the new version onto Applications (replace the old one). Because the app is unsigned, allow it once more with **Open Anyway** (step 3). Your settings, library and slots are kept.
+Download the new `.dmg` from the [latest release](https://github.com/kimmjen/aerial-manager/releases/latest), quit Aerial Manager from its menu-bar icon, and drag the new version onto Applications (replace the old one). Because the app is unsigned, allow it once more with **Open Anyway** (step 3). If macOS asks for access to a folder such as Documents, allow it again. Your settings, library and slots are kept.
 
 ## Troubleshooting
 
